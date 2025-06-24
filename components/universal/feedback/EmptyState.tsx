@@ -5,7 +5,7 @@ import { VStack, HStack } from '@/components/universal/layout/Stack';
 import { Button } from '@/components/universal/interaction/Button';
 import { Card, CardContent } from '@/components/universal/display/Card';
 import { useGlassTheme } from '@/lib/design/themes/glass-theme';
-import { useResponsiveSpacing } from '@/lib/design/responsive-spacing';
+import { useSpacing } from '@/contexts/SpacingContext';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { 
   Symbol,
@@ -115,7 +115,7 @@ export function EmptyState({
   compact = false,
 }: EmptyStateProps) {
   const glassTheme = useGlassTheme();
-  const spacing = useResponsiveSpacing();
+  const { spacing } = useSpacing();
   
   const config = EMPTY_STATE_CONFIGS[variant];
   const displayTitle = title || config.title;
@@ -127,7 +127,7 @@ export function EmptyState({
     minHeight: fullHeight ? 400 : compact ? 200 : 300,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    padding: spacing.scale(4),
+    padding: spacing[4],
   };
 
   return (
@@ -135,14 +135,15 @@ export function EmptyState({
       entering={FadeIn.duration(300)}
       style={containerStyle}
     >
-      <Card style={[
-        glassTheme.glassContainer, 
-        { 
-          width: '100%', 
-          maxWidth: 400,
-          padding: compact ? spacing.scale(3) : spacing.scale(6),
-        }
-      ]}>
+      <Card style={{ 
+        width: '100%', 
+        maxWidth: 400,
+        padding: compact ? spacing[3] : spacing[6],
+        backgroundColor: glassTheme.colors.background,
+        borderColor: glassTheme.colors.border,
+        borderWidth: 1,
+        borderRadius: 12,
+      }}>
         <CardContent>
           <VStack gap={compact ? 3 : 4} align="center">
             {/* Icon */}
@@ -164,10 +165,10 @@ export function EmptyState({
             {/* Title */}
             <Animated.View entering={FadeInUp.delay(200).springify()}>
               <Text 
-                variant={compact ? 'subtitle' : 'h3'} 
+                size={compact ? 'lg' : 'xl'}
+                weight="semibold"
+                align="center"
                 style={{ 
-                  fontWeight: '600',
-                  textAlign: 'center',
                   color: variant === 'error' ? '#DC2626' : '#111827',
                 }}
               >
@@ -179,10 +180,10 @@ export function EmptyState({
             {displayDescription && (
               <Animated.View entering={FadeInUp.delay(300).springify()}>
                 <Text 
-                  variant="body" 
+                  size="base"
+                  align="center"
+                  color="muted"
                   style={{ 
-                    textAlign: 'center',
-                    color: '#6B7280',
                     maxWidth: 300,
                   }}
                 >
@@ -194,12 +195,12 @@ export function EmptyState({
             {/* Actions */}
             {actions.length > 0 && (
               <Animated.View entering={FadeInUp.delay(400).springify()}>
-                <HStack gap={2} style={{ marginTop: spacing.scale(2) }}>
+                <HStack gap={2} style={{ marginTop: spacing[2] }}>
                   {actions.map((action, index) => (
                     <Button
                       key={index}
                       variant={action.variant || 'default'}
-                      size={compact ? 'sm' : 'md'}
+                      size={compact ? 'sm' : 'default'}
                       onPress={action.onPress}
                     >
                       {action.icon && <View style={{ marginRight: 4 }}>{action.icon}</View>}
