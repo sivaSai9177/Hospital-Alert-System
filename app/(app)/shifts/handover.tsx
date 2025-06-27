@@ -46,10 +46,11 @@ import { api } from '@/lib/api/trpc';
 import { format } from 'date-fns';
 import { cn } from '@/lib/core/utils';
 import { haptic } from '@/lib/ui/haptics';
-import { AnimatedPageWrapper, pageEnteringAnimations } from '@/lib/navigation/page-transitions';
+import { AnimatedPageWrapper, pageEnteringAnimations } from '@/lib/navigation';
 import { useLayoutTransition } from '@/hooks/useLayoutTransition';
 import { DashboardGrid, Widget } from '@/components/universal/layout/WidgetGrid';
 import { showSuccessAlert, showErrorAlert } from '@/lib/core/alert';
+import { useShiftStore } from '@/lib/stores/shift-store';
 
 interface HandoverNote {
   patientId: string;
@@ -76,6 +77,8 @@ export default function ShiftHandoverScreen() {
   const theme = useTheme();
   const { spacing } = useSpacing();
   const { user } = useAuth();
+  const utils = api.useUtils();
+  const { setShiftStatus, clearHandoverData } = useShiftStore();
   
   const [refreshing, setRefreshing] = useState(false);
   const [selectedAlerts, setSelectedAlerts] = useState<string[]>([]);
@@ -103,7 +106,18 @@ export default function ShiftHandoverScreen() {
   
   // End shift mutation
   const endShiftMutation = api.healthcare.endShift.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Update shift store
+      setShiftStatus({
+        isOnDuty: false,
+        shiftStartTime: null,
+        shiftEndTime: new Date(),
+      });
+      clearHandoverData();
+      
+      // Invalidate shift status query to force refetch
+      await utils.healthcare.getShiftStatus.invalidate();
+      
       showSuccessAlert('Shift handover completed successfully');
       router.back();
     },
@@ -205,7 +219,7 @@ export default function ShiftHandoverScreen() {
                               </Text>
                             </VStack>
                             <Badge variant="secondary" size="default">
-                              {user?.role === 'nurse' ? 'Nurse' : 'Doctor'}
+                              <Text>{user?.role === 'nurse' ? 'Nurse' : 'Doctor'}</Text>
                             </Badge>
                           </HStack>
                           
@@ -265,7 +279,7 @@ export default function ShiftHandoverScreen() {
                                       <Text weight="medium">{staff.name || 'Unknown'}</Text>
                                       <Text size="sm" color="muted">{staff.department || staff.role}</Text>
                                     </VStack>
-                                    <Badge variant="outline">{staff.role}</Badge>
+                                    <Badge variant="outline"><Text>{staff.role}</Text></Badge>
                                   </HStack>
                                 </Animated.View>
                               ))}
@@ -334,7 +348,7 @@ export default function ShiftHandoverScreen() {
                                           <Text weight="semibold">{alert.alertType.replace(/_/g, ' ').toUpperCase()}</Text>
                                           <HStack gap={2 as any} alignItems="center">
                                             <Badge variant="secondary" size="sm">
-                                              Room {alert.roomNumber}
+                                              <Text size="sm">Room {alert.roomNumber}</Text>
                                             </Badge>
                                             <Badge 
                                               variant="outline" 
@@ -350,7 +364,7 @@ export default function ShiftHandoverScreen() {
                                             </Badge>
                                             {alert.status === 'acknowledged' && (
                                               <Badge variant="default" size="sm">
-                                                Acknowledged
+                                                <Text size="sm">Acknowledged</Text>
                                               </Badge>
                                             )}
                                           </HStack>
