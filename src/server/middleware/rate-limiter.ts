@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { log } from '@/lib/core/debug/unified-logger';
+import { log } from '@/lib/core/debug/server-logger';
 import type { Context } from '@/src/server/trpc';
 
 // In-memory storage for rate limiting (use Redis in production)

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, ScrollView, TextInput, Platform } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Card } from '@/components/universal/display/Card';
 import { Text } from '@/components/universal/typography';
 import { VStack, HStack } from '@/components/universal/layout/Stack';
@@ -75,6 +76,7 @@ const SEVERITY_COLORS = {
 };
 
 export function ActivityLogsBlock({ hospitalId, userId, limit = 100 }: ActivityLogsBlockProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [logType, setLogType] = useState<LogType>('all');
   const [severity, setSeverity] = useState<LogSeverity>('all');
@@ -314,9 +316,7 @@ export function ActivityLogsBlock({ hospitalId, userId, limit = 100 }: ActivityL
           actionLabel="Complete Your Profile"
           onAction={() => {
             // Navigate to profile completion
-            if (typeof window !== 'undefined') {
-              window.location.href = '/auth/complete-profile';
-            }
+            router.push('/(public)/auth/complete-profile');
           }}
         />
       </View>

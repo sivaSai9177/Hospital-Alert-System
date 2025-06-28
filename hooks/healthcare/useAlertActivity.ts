@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 import { log } from '@/lib/core/debug/logger';
 
 // Note: useActivity is a proposed React 19 feature
@@ -70,7 +70,7 @@ export function useAlertActivity({
 
   // Track user activity on web
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
 
     const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
     

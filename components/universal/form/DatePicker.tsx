@@ -411,13 +411,33 @@ export const DatePicker = React.forwardRef<View, DatePickerProps>(({
   // Handle today button
   const handleToday = () => {
     const today = new Date();
+    // Normalize to start of day for comparison
+    today.setHours(0, 0, 0, 0);
     
     // Check if today is within allowed date range
-    if ((minDateValue && today < minDateValue) || (maxDateValue && today > maxDateValue)) {
-      if (useHaptics) {
-        haptic('error');
+    if (minDateValue || maxDateValue) {
+      const minDate = minDateValue ? new Date(minDateValue) : null;
+      const maxDate = maxDateValue ? new Date(maxDateValue) : null;
+      
+      if (minDate) {
+        minDate.setHours(0, 0, 0, 0);
+        if (today < minDate) {
+          if (useHaptics) {
+            haptic('error');
+          }
+          return;
+        }
       }
-      return;
+      
+      if (maxDate) {
+        maxDate.setHours(23, 59, 59, 999);
+        if (today > maxDate) {
+          if (useHaptics) {
+            haptic('error');
+          }
+          return;
+        }
+      }
     }
     
     setSelectedDate(today);
@@ -762,10 +782,24 @@ export const DatePicker = React.forwardRef<View, DatePickerProps>(({
                 variant="outline"
                 size="sm"
                 onPress={handleToday}
-                disabled={
-                  (minDateValue && new Date() < minDateValue) ||
-                  (maxDateValue && new Date() > maxDateValue)
-                }
+                disabled={(() => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  
+                  if (minDateValue) {
+                    const minDate = new Date(minDateValue);
+                    minDate.setHours(0, 0, 0, 0);
+                    if (today < minDate) return true;
+                  }
+                  
+                  if (maxDateValue) {
+                    const maxDate = new Date(maxDateValue);
+                    maxDate.setHours(23, 59, 59, 999);
+                    if (today > maxDate) return true;
+                  }
+                  
+                  return false;
+                })()}
               >
                 Today
               </Button>

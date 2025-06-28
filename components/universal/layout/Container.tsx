@@ -127,9 +127,11 @@ export const Container = React.forwardRef<any, ContainerProps>(({
   const scrollContent = scroll ? (
     <AnimatedScrollView
       ref={ref}
-      className="flex-1"
+      style={{ flex: 1 }}
       contentContainerStyle={{ flexGrow: 1 }}
       showsVerticalScrollIndicator={false}
+      scrollEnabled={true}
+      nestedScrollEnabled={true}
       entering={animated && shouldAnimate() ? FadeIn.duration(animationDuration).delay(animationDelay) : undefined}
       {...scrollProps}
     >

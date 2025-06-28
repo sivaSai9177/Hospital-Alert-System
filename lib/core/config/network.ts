@@ -29,7 +29,7 @@ export const NETWORK_CONFIGS = {
   secondary: {
     name: 'Secondary WiFi',
     ipRange: '192.168.2.x',
-    expectedIPs: ['192.168.2.1'],
+    expectedIPs: [], // Removed hardcoded IP - will use environment variable
     apiPort: 8081,
     dbPort: 5432,
   },
@@ -137,6 +137,13 @@ export async function detectNetworkConfig(): Promise<typeof NETWORK_CONFIGS[keyo
 
 // Get API URL for current network
 export async function getNetworkApiUrl(): Promise<string> {
+  // First priority: Check environment variable
+  const envApiUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (envApiUrl && envApiUrl !== '') {
+    log.info('Using environment API URL', 'NETWORK_CONFIG', { url: envApiUrl });
+    return envApiUrl;
+  }
+  
   const config = await detectNetworkConfig();
   const currentIP = await getCurrentNetworkIP();
   

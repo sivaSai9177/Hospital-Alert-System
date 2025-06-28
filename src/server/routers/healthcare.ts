@@ -200,12 +200,30 @@ export const healthcareRouter = router({
         throw new Error('Hospital assignment required. Please complete your profile.');
       }
       
-      // Validate hospitalId matches user's assigned hospital
-      if (hospitalId && hospitalId !== userHospitalId) {
-        throw new Error('Invalid hospital ID. You can only create alerts for your assigned hospital.');
-      }
+      // Validate user has access to the hospital through their organization
+      let alertHospitalId = hospitalId || userHospitalId;
       
-      const alertHospitalId = hospitalId || userHospitalId;
+      if (hospitalId && ctx.user.organizationId) {
+        // Check if the hospital belongs to the user's organization
+        const [hospitalAccess] = await db
+          .select({ id: hospitals.id })
+          .from(hospitals)
+          .where(
+            and(
+              eq(hospitals.id, hospitalId),
+              eq(hospitals.organizationId, ctx.user.organizationId)
+            )
+          )
+          .limit(1);
+        
+        if (!hospitalAccess) {
+          throw new Error('You can only create alerts for hospitals within your organization.');
+        }
+        
+        alertHospitalId = hospitalId;
+      } else if (!userHospitalId) {
+        throw new Error('Hospital assignment required. Please complete your profile.');
+      }
       
       try {
         // Create the alert

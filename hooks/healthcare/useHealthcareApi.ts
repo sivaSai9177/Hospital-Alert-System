@@ -11,7 +11,7 @@ export function useActiveAlerts(options?: {
   const { hospitalId, canAccessHealthcare } = useHospitalContext();
   
   return api.healthcare.getActiveAlerts.useQuery(
-    { hospitalId: hospitalId! },
+    { hospitalId: hospitalId || '' },
     {
       enabled: !!hospitalId && canAccessHealthcare && (options?.enabled ?? true),
       refetchInterval: options?.refetchInterval || 30000, // 30 seconds
@@ -172,7 +172,7 @@ export function useMyPatients(options?: {
   const { hospitalId, canAccessHealthcare } = useHospitalContext();
   
   return api.healthcare.getMyPatients.useQuery(
-    { hospitalId: hospitalId! },
+    { hospitalId: hospitalId || '' },
     {
       enabled: !!hospitalId && canAccessHealthcare && (options?.enabled ?? true),
       refetchInterval: options?.refetchInterval || 30000,
@@ -193,7 +193,7 @@ export function useActiveAlertsWithOrg(options?: {
   const hospitalId = options?.hospitalId || contextHospitalId;
   
   return api.healthcare.getActiveAlertsWithOrg.useQuery(
-    { hospitalId: hospitalId! },
+    { hospitalId: hospitalId || '' },
     {
       enabled: !!hospitalId && (options?.enabled ?? true),
       refetchInterval: options?.refetchInterval || 30000,
@@ -211,7 +211,7 @@ export function useOrganizationAlertStats(options?: {
   refetchInterval?: number;
 }) {
   return api.healthcare.getOrganizationAlertStats.useQuery(
-    { organizationId: options?.organizationId! },
+    { organizationId: options?.organizationId || '' },
     {
       enabled: !!options?.organizationId && (options?.enabled ?? true),
       refetchInterval: options?.refetchInterval || 60000,
@@ -281,7 +281,7 @@ export function useOrganizationHospitals(organizationId: string | undefined, opt
   enabled?: boolean;
 }) {
   return api.healthcare.getOrganizationHospitals.useQuery(
-    { organizationId: organizationId! },
+    { organizationId: organizationId || '' },
     {
       enabled: !!organizationId && organizationId !== '' && (options?.enabled ?? true),
       staleTime: 10 * 60 * 1000,

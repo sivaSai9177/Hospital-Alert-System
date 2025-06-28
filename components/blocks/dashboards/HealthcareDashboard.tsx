@@ -30,6 +30,7 @@ import {
   ActivePatients,
   GlassLoadingScreen,
 } from '@/components/blocks/healthcare';
+import { MobileHealthcareDashboard } from './MobileHealthcareDashboard';
 import { HospitalSwitcher } from '@/components/blocks/organization';
 import { useSpacing } from '@/lib/stores/spacing-store';
 import { useAlertWebSocket } from '@/hooks/healthcare';
@@ -169,6 +170,11 @@ export default function HealthcareDashboard() {
     return <GlassLoadingScreen message="Loading healthcare data..." showProgress={true} />;
   }
   
+  // Use mobile-optimized dashboard for mobile devices
+  if (Platform.OS !== 'web' || isMobile) {
+    return <MobileHealthcareDashboard />;
+  }
+  
   // Check if user has hospital assignment after loading is complete
   if (!hospitalId && hasHydrated && !hospitalsLoading) {
     return (
@@ -197,7 +203,7 @@ export default function HealthcareDashboard() {
       {/* Essential Actions - Better Design */}
       {(role === 'operator' || role === 'head_doctor') && (
         <Button
-          onPress={() => router.push('/create-alert')}
+          onPress={() => router.push('/(modals)/create-alert')}
           variant="destructive"
           fullWidth
           size="lg"

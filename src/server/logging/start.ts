@@ -5,7 +5,7 @@
  */
 
 import { createLoggingService, LoggingService } from './service';
-import { log } from '@/lib/core/debug/unified-logger';
+import { log } from '@/lib/core/debug/server-logger';
 
 // Initialize logging service
 let loggingService: LoggingService;

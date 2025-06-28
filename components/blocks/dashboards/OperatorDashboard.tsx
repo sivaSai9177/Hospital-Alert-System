@@ -69,7 +69,7 @@ export default function OperatorDashboard() {
   
   const handleCreateAlert = () => {
     haptic('medium');
-    router.push('/create-alert');
+    router.push('/(modals)/create-alert');
   };
   
   const content = (

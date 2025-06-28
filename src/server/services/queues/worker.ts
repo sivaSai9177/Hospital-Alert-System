@@ -5,7 +5,7 @@
 
 import { Queue, Worker, Job } from 'bullmq';
 import Redis from 'ioredis';
-import { log } from '@/lib/core/debug/unified-logger';
+import { log } from '@/lib/core/debug/server-logger';
 import { sendAlertNotificationEmail } from '../email';
 import { sendPushNotification } from '../push-notifications';
 import { db } from '@/src/db';

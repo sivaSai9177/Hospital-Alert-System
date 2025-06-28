@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { auth } from "@/lib/auth/auth-server";
-import { logger } from '@/lib/core/debug/unified-logger';
+import { logger } from '@/lib/core/debug/server-logger';
 
 export async function GET(request: Request) {
   const corsHeaders = {

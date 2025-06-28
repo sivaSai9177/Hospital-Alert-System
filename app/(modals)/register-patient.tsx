@@ -3,7 +3,7 @@ import { Platform, View, KeyboardAvoidingView, Pressable } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHospitalContext } from '@/hooks/healthcare';
-import { PatientCreationForm } from '@/components/blocks/healthcare/PatientCreationForm';
+import { PatientCreationForm } from '@/components/blocks/healthcare';
 import { Text } from '@/components/universal/typography';
 import { VStack } from '@/components/universal/layout';
 import { Symbol, AlertCircle } from '@/components/universal/display/Symbols';
@@ -35,7 +35,9 @@ export default function RegisterPatientModal() {
   const handleSuccess = (patient?: any) => {
     // Navigate to patient details if patient was created
     if (patient?.id) {
-      router.replace(`/(healthcare)/patient-details?id=${patient.id}` as any);
+      logger.info('Navigating to patient details', 'REGISTER_PATIENT', { patientId: patient.id });
+      // Use push instead of replace to maintain navigation stack
+      router.push(`/patient-details?patientId=${patient.id}` as any);
     } else {
       router.back();
     }

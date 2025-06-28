@@ -72,7 +72,7 @@ export function FloatingAlertButton() {
     }
     
     // Navigate to create alert modal
-    router.push('/create-alert');
+    router.push('/(modals)/create-alert');
   };
   
   // For web, use regular TouchableOpacity

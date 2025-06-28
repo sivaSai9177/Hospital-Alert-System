@@ -1,6 +1,5 @@
 import React from 'react';
 import { ScrollView, RefreshControl, View, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/lib/theme/provider';
@@ -18,6 +17,7 @@ import {
 } from '@/components/universal';
 import { useSpacing } from '@/lib/stores/spacing-store';
 import { useShadow } from '@/hooks/useShadow';
+import { UnifiedHeader } from '@/components/blocks/navigation/UnifiedHeader';
 
 // Import role-specific dashboards
 import { 
@@ -84,20 +84,6 @@ function DefaultDashboard() {
   
   const content = (
     <VStack gap={5 as any}>
-      {/* Header */}
-      <HStack justifyContent="space-between" alignItems="center">
-        <Box style={{ flex: 1 }}>
-          <Heading1>Welcome back!</Heading1>
-          <Text colorTheme="mutedForeground">
-            {user?.name || user?.email || 'User'}
-          </Text>
-        </Box>
-        <Avatar
-          source={user?.image ? { uri: user.image } : undefined}
-          name={user?.name || 'User'}
-          size="xl"
-        />
-      </HStack>
       
       {/* Quick Actions */}
       <Card style={shadowMd}>
@@ -147,29 +133,51 @@ function DefaultDashboard() {
   
   if (Platform.OS !== 'web') {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-        <ScrollView
-          contentContainerStyle={{ padding: spacing[4] as any, paddingBottom: spacing[6] as any }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={theme.primary}
-            />
-          }
-        >
-          {content}
-        </ScrollView>
-      </SafeAreaView>
+      <View style={{ flex: 1, backgroundColor: theme.background }}>
+        <UnifiedHeader 
+            title="Welcome back!"
+            subtitle={user?.name || user?.email || 'User'}
+            rightElement={
+              <Avatar
+                source={user?.image ? { uri: user.image } : undefined}
+                name={user?.name || 'User'}
+                size="xl"
+              />
+            }
+          />
+          <ScrollView
+            contentContainerStyle={{ padding: spacing[4] as any, paddingBottom: spacing[6] as any }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={theme.primary}
+              />
+            }
+          >
+            {content}
+          </ScrollView>
+      </View>
     );
   }
   
   return (
     <Container>
-      <VStack p={4} gap={4 as any}>
-        {content}
-      </VStack>
+      <UnifiedHeader 
+          title="Welcome back!"
+          subtitle={user?.name || user?.email || 'User'}
+          rightElement={
+            <Avatar
+              source={user?.image ? { uri: user.image } : undefined}
+              name={user?.name || 'User'}
+              size="xl"
+            />
+          }
+        />
+        <VStack p={4} gap={4 as any}>
+          {content}
+        </VStack>
     </Container>
   );
 }

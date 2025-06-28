@@ -155,8 +155,9 @@ export function SelectionButton({
     if (!icon) return null;
     
     if (typeof icon === 'string') {
-      // Check if it's an emoji (simple check for now)
-      if (icon.length <= 2) {
+      // Check if it's an emoji - better detection for complex emojis
+      const emojiRegex = /^(\p{Emoji}|\p{Emoji_Presentation}|\p{Emoji_Modifier_Base}|\p{Emoji_Component})+$/u;
+      if (emojiRegex.test(icon) || icon.length <= 4) {
         return (
           <Text size={size === 'sm' ? 'xl' : size === 'md' ? '2xl' : '3xl'}>
             {icon}
@@ -185,6 +186,7 @@ export function SelectionButton({
       borderRadius: config.borderRadius,
       padding: typeof padding === 'number' ? padding : config.padding,
       opacity: disabled ? 0.5 : 1,
+      minHeight: config.iconSize + config.padding * 2, // Ensure minimum touch target
     };
     
     switch (variant) {
@@ -218,13 +220,14 @@ export function SelectionButton({
       onHoverIn={() => Platform.OS === 'web' && setIsHovered(true)}
       onHoverOut={() => Platform.OS === 'web' && setIsHovered(false)}
       disabled={disabled}
+      hitSlop={{ top: 0, bottom: 0, left: 0, right: 0 }} // Ensure no negative hit slop
       style={[
         {
           position: 'relative',
           overflow: 'hidden',
           width: '100%',
-          alignItems: layout === 'horizontal' ? 'flex-start' : 'center',
-          justifyContent: layout === 'horizontal' ? 'flex-start' : 'center',
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         getVariantStyles(),
         animatedStyle,
@@ -243,8 +246,8 @@ export function SelectionButton({
               ? selectedColor + '10' 
               : theme.primary + '05',
             borderRadius: config.borderRadius,
-            zIndex: 0,
           }}
+          pointerEvents="none"
         />
       )}
       
@@ -262,10 +265,10 @@ export function SelectionButton({
               height: config.checkmarkSize,
               alignItems: 'center',
               justifyContent: 'center',
-              zIndex: 2,
             },
             checkmarkAnimatedStyle,
           ]}
+          pointerEvents="none"
         >
           <Symbol 
             name="checkmark" 
@@ -283,21 +286,21 @@ export function SelectionButton({
           justifyContent: 'center',
           gap: spacing[layout === 'horizontal' ? 1.5 : 1.5],
           flex: 1,
-          zIndex: 1,
         }}
+        pointerEvents="none"
       >
         {renderIcon()}
         
         <View style={{ 
           flex: layout === 'horizontal' ? 1 : undefined,
-          alignItems: layout === 'horizontal' ? 'flex-start' : 'center',
+          alignItems: 'center',
           justifyContent: 'center',
         }}>
           <Text
             size={config.textSize}
             weight={selected ? 'semibold' : 'medium'}
             colorTheme={selected ? 'foreground' : 'mutedForeground'}
-            align={layout === 'horizontal' ? 'left' : 'center'}
+            align="center"
             numberOfLines={layout === 'horizontal' ? 1 : 2}
           >
             {label}

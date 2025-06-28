@@ -156,23 +156,18 @@ export function AlertListVirtualized({
     }
 
     return (
-      <Animated.View 
-        entering={FadeInDown.duration(300)}
-        style={{ 
-          paddingHorizontal: spacing[4] as number,
-          paddingTop: spacing[8] as number,
-        }}
-      >
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing[4] as number }}>
         <EmptyState
-          icon="bell.slash"
-          title="No alerts found"
+          variant="no-alerts"
+          title={searchQuery || hasFilters ? "No alerts found" : "All Clear!"}
           description={
             searchQuery || hasFilters
               ? 'Try adjusting your filters'
-              : 'All alerts have been handled'
+              : 'No active alerts at the moment'
           }
+          fullHeight
         />
-      </Animated.View>
+      </View>
     );
   }, [isLoading, spacing, searchQuery, hasFilters]);
 
@@ -228,7 +223,6 @@ export function AlertListVirtualized({
       data={alerts}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
-      getItemLayout={getItemLayout}
       ItemSeparatorComponent={ItemSeparator}
       ListHeaderComponent={ListHeaderComponent}
       ListFooterComponent={ListFooterComponent}

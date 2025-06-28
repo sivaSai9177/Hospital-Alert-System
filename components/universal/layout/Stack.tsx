@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ViewProps } from 'react-native';
+import { View, ViewProps, Platform } from 'react-native';
 import { cn } from '@/lib/core/utils';
 import { Box, BoxProps } from './Box';
 import { useSpacing } from '@/lib/stores/spacing-store';
@@ -108,9 +108,10 @@ export const VStack = React.forwardRef<View, VStackProps>(({
   reverse = false,
   className,
   children,
+  style,
   ...props
 }, ref) => {
-  const { density } = useSpacing();
+  const { density, spacing: spacingValues } = useSpacing();
   const rawGapValue = spacing ?? gap;
   const gapValue = resolveSpacingValue(rawGapValue);
   
@@ -119,14 +120,27 @@ export const VStack = React.forwardRef<View, VStackProps>(({
     ? getGapClass(gapValue, density)
     : gapClasses[gapValue] || '';
   
+  // Android doesn't support gap property well, use margin instead
+  const childrenWithSpacing = Platform.OS === 'android' && gapValue > 0 
+    ? React.Children.map(children, (child, index) => {
+        if (index === 0 || !React.isValidElement(child)) return child;
+        return React.cloneElement(child as React.ReactElement<any>, {
+          style: [
+            (child.props as any).style,
+            { marginTop: spacingValues[gapValue] || gapValue * 4 }
+          ]
+        });
+      })
+    : children;
+  
   return (
     <Box
       ref={ref}
       className={cn(
         // Base flex column
         'flex flex-col',
-        // Gap
-        gapClass,
+        // Gap - only for non-Android
+        Platform.OS !== 'android' && gapClass,
         // Alignment
         alignClasses[align],
         justifyClasses[justify],
@@ -137,9 +151,10 @@ export const VStack = React.forwardRef<View, VStackProps>(({
         // Custom className
         className
       )}
+      style={style}
       {...props}
     >
-      {children}
+      {childrenWithSpacing}
     </Box>
   );
 });
@@ -160,9 +175,10 @@ export const HStack = React.forwardRef<View, HStackProps>(({
   reverse = false,
   className,
   children,
+  style,
   ...props
 }, ref) => {
-  const { density } = useSpacing();
+  const { density, spacing: spacingValues } = useSpacing();
   const rawGapValue = spacing ?? gap;
   const gapValue = resolveSpacingValue(rawGapValue);
   
@@ -171,14 +187,27 @@ export const HStack = React.forwardRef<View, HStackProps>(({
     ? getGapClass(gapValue, density)
     : gapClasses[gapValue] || '';
   
+  // Android doesn't support gap property well, use margin instead
+  const childrenWithSpacing = Platform.OS === 'android' && gapValue > 0 
+    ? React.Children.map(children, (child, index) => {
+        if (index === 0 || !React.isValidElement(child)) return child;
+        return React.cloneElement(child as React.ReactElement<any>, {
+          style: [
+            (child.props as any).style,
+            { marginLeft: spacingValues[gapValue] || gapValue * 4 }
+          ]
+        });
+      })
+    : children;
+  
   return (
     <Box
       ref={ref}
       className={cn(
         // Base flex row
         'flex flex-row',
-        // Gap
-        gapClass,
+        // Gap - only for non-Android
+        Platform.OS !== 'android' && gapClass,
         // Alignment
         alignClasses[align],
         justifyClasses[justify],
@@ -189,9 +218,10 @@ export const HStack = React.forwardRef<View, HStackProps>(({
         // Custom className
         className
       )}
+      style={style}
       {...props}
     >
-      {children}
+      {childrenWithSpacing}
     </Box>
   );
 });

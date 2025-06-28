@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import { webStorage, mobileStorage } from '../core/secure-storage';
 import { Session, User } from 'better-auth/types';
-import { logger } from '../core/debug/server-logger';
+import { logger } from '../core/debug/unified-logger';
 
 // Standardized storage keys - use underscore notation for consistency
 const SESSION_TOKEN_KEY = 'better-auth_session-token';

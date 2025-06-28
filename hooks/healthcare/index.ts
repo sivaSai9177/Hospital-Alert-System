@@ -6,6 +6,7 @@ export { useHealthcareQuery, useHealthcareMutation } from './useHealthcareQuery'
 export { useGlobalErrorStore } from './useGlobalErrorStore';
 export { useHospitalContext, useRequiredHospitalContext } from './useHospitalContext';
 export { useHealthcareUser, useRequiredHealthcareUser } from './useHealthcareUser';
+export { useEscalationQueue, useBatchAcknowledgeEscalatedAlerts, useEscalatedAlert } from './useEscalationQueue';
 
 // Enhanced API hooks
 export {

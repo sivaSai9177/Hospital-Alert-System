@@ -1,4 +1,5 @@
 import { Alert, Platform } from "react-native";
+import { useToastStore } from "@/lib/stores/toast-store";
 
 export interface AlertOptions {
   title: string;
@@ -7,30 +8,46 @@ export interface AlertOptions {
 }
 
 export function showAlert({ title, description, variant = "default" }: AlertOptions) {
+  // Use toast notifications instead of native alerts
+  const toastStore = useToastStore.getState();
+  
+  switch (variant) {
+    case "success":
+      toastStore.showSuccess(title, description);
+      break;
+    case "destructive":
+      toastStore.showError(title, description);
+      break;
+    default:
+      toastStore.showInfo(title, description);
+      break;
+  }
+}
+
+export function showSuccessAlert(title: string, description?: string) {
+  useToastStore.getState().showSuccess(title, description);
+}
+
+export function showErrorAlert(title: string, description?: string) {
+  useToastStore.getState().showError(title, description);
+}
+
+// Legacy function for cases where native alert is truly needed
+export function showNativeAlert(title: string, description?: string, onOk?: () => void) {
   if (Platform.OS === "web") {
-    // For web, we could use a simple browser alert or console log
-    // Since toast was causing issues, let's use browser alert for now
     const message = description ? `${title}\n${description}` : title;
     alert(message);
+    onOk?.();
   } else {
-    // For mobile, use native Alert
     Alert.alert(
       title,
       description,
       [
         {
           text: "OK",
-          style: variant === "destructive" ? "destructive" : "default",
+          onPress: onOk,
         },
       ]
     );
   }
-}
-
-export function showSuccessAlert(title: string, description?: string) {
-  showAlert({ title, description, variant: "success" });
-}
-
-export function showErrorAlert(title: string, description?: string) {
-  showAlert({ title, description, variant: "destructive" });
 }

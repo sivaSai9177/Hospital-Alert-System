@@ -312,33 +312,18 @@ export const useAuthStore = create<AuthStore>()(
         onRehydrateStorage: (state) => {
           logger.store.update('authStore', 'onRehydrateStorage', { hasState: !!state });
           
-          // Immediately mark as hydrated on web to prevent loading screen hang
-          if (Platform.OS === 'web' && typeof window !== 'undefined') {
-            setTimeout(() => {
-              const currentState = useAuthStore.getState();
-              if (!currentState.hasHydrated) {
-                logger.store.update('authStore', 'forceHydrate', {});
-                currentState.setHasHydrated(true);
-              }
-            }, 100);
-          }
-          
           return (rehydratedState, error) => {
             if (error) {
               logger.store.error('authStore', 'rehydrateError', error);
             }
             
-            // Always set hasHydrated to true after rehydration attempt
+            // Always set hasHydrated to true immediately after rehydration
             if (rehydratedState) {
               rehydratedState.setHasHydrated(true);
             } else {
-              // Even if no state, mark as hydrated
-              setTimeout(() => {
-                const currentState = useAuthStore.getState();
-                if (!currentState.hasHydrated) {
-                  currentState.setHasHydrated(true);
-                }
-              }, 0);
+              // Even if no state, mark as hydrated immediately
+              const currentState = useAuthStore.getState();
+              currentState.setHasHydrated(true);
             }
           };
         },

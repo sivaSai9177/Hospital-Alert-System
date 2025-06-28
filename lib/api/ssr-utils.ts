@@ -100,6 +100,19 @@ export const prefetchHelpers = {
     
     return dehydrate(queryClient);
   },
+  
+  async escalationQueue(hospitalId: string, cookie?: string) {
+    const client = serverApi(cookie);
+    const queryClient = createServerQueryClient();
+    
+    // Prefetch active alerts for escalation queue
+    await queryClient.prefetchQuery({
+      queryKey: ['healthcare', 'getActiveAlerts', { hospitalId }],
+      queryFn: () => client.healthcare.getActiveAlerts.query({ hospitalId }),
+    });
+    
+    return dehydrate(queryClient);
+  },
 };
 
 // Utility to combine multiple dehydrated states

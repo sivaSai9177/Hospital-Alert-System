@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Platform } from 'react-native';
 import { api } from '@/lib/api/trpc';
 import { log } from '@/lib/core/debug/logger';
 import { showSuccessAlert } from '@/lib/core/alert';
@@ -306,7 +307,7 @@ export function useAlertWebSocket({
 
   // Handle connection close events (web only)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const handleBeforeUnload = () => {
         alertWebSocketManager.onConnectionClose(1000, 'Page unload');
       };

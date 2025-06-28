@@ -1,37 +1,66 @@
 # Test Users Configuration
 testUsers:
-  # Healthcare Professional
-  nurse:
-    email: nurse@test.hospital.com
-    password: Test123!
-    role: nurse
+  # Operator
+  operator:
+    email: operator@test.com
+    password: Operator123!
+    role: operator
     organization: Test Hospital
     
   # Doctor
   doctor:
-    email: doctor@test.hospital.com
-    password: Test123!
+    email: doctor@test.com
+    password: Doctor123!
     role: doctor
-    organization: Test Hospital
-    
-  # Manager
-  manager:
-    email: manager@test.hospital.com
-    password: Test123!
-    role: manager
     organization: Test Hospital
     
   # Admin
   admin:
-    email: admin@test.hospital.com
-    password: Test123!
+    email: admin@test.com
+    password: Admin123!
     role: admin
     organization: Test Hospital
     
-  # New User (for registration tests)
-  newUser:
-    email: newuser@test.hospital.com
-    password: NewUser123!
-    fullName: Test User
+  # Nurse
+  nurse:
+    email: nurse@test.com
+    password: Nurse123!
     role: nurse
     organization: Test Hospital
+    
+  # Manager
+  manager:
+    email: manager@test.com
+    password: Manager123!
+    role: manager
+    organization: Test Hospital
+    
+  # Head Doctor
+  headDoctor:
+    email: headdoctor@test.com
+    password: Headdoctor123!
+    role: head_doctor
+    organization: Test Hospital
+    
+  # Head Nurse
+  headNurse:
+    email: headnurse@test.com
+    password: Headnurse123!
+    role: head_nurse
+    organization: Test Hospital
+    
+  # Regular User
+  user:
+    email: regularuser@test.com
+    password: User123!
+    role: user
+    organization: Test Hospital
+    
+  # Additional Test Users
+  testNurse:
+    email: doremon@gmail.com
+    password: Nurse123!
+    role: nurse
+    organization: Test Hospital
+    
+  # Note: saipramod273@gmail.com removed as it uses Google OAuth for authentication

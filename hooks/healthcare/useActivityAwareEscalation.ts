@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { Platform } from 'react-native';
 
 interface UseActivityAwareEscalationOptions {
   onInactive?: () => void;
@@ -56,23 +57,34 @@ export function useActivityAwareEscalation(
       }, inactivityTimeout);
     };
 
-    // Listen for user activity
-    const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
-    events.forEach(event => {
-      window.addEventListener(event, handleActivity);
-    });
-
-    // Initial activity check
-    handleActivity();
-
-    return () => {
+    // Listen for user activity - only on web platform
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
       events.forEach(event => {
-        window.removeEventListener(event, handleActivity);
+        window.addEventListener(event, handleActivity);
       });
-      if (inactivityTimerRef.current) {
-        clearTimeout(inactivityTimerRef.current);
-      }
-    };
+
+      // Initial activity check
+      handleActivity();
+
+      return () => {
+        events.forEach(event => {
+          window.removeEventListener(event, handleActivity);
+        });
+        if (inactivityTimerRef.current) {
+          clearTimeout(inactivityTimerRef.current);
+        }
+      };
+    } else {
+      // For mobile platforms, just run the initial activity check
+      handleActivity();
+      
+      return () => {
+        if (inactivityTimerRef.current) {
+          clearTimeout(inactivityTimerRef.current);
+        }
+      };
+    }
   }, [isPaused, onInactive, onActive, inactivityTimeout]);
 
   return {

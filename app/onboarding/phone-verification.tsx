@@ -1,0 +1,1 @@
+export { PhoneVerificationScreen as default } from '@/modules/onboarding/screens/PhoneVerification';

@@ -4,6 +4,7 @@ import { useAuthStore } from '@/lib/stores/auth-store';
 import { api } from '@/lib/api/trpc';
 import { showSuccessAlert, showErrorAlert } from '@/lib/core/alert';
 import { log } from '@/lib/core/debug/logger';
+import { ROUTES } from '@/lib/navigation/routes';
 
 interface UseVerifyEmailOptions {
   email?: string;
@@ -91,7 +92,7 @@ export function useVerifyEmail(options: UseVerifyEmailOptions = {}) {
   }, [email]);
 
   const goBack = useCallback(() => {
-    router.replace('/(auth)/login');
+    router.replace(ROUTES.auth.login);
   }, [router]);
 
   return {

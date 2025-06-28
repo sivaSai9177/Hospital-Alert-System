@@ -10,7 +10,7 @@
 import PgBoss from 'pg-boss';
 import Redis from 'ioredis';
 import { EventEmitter } from 'events';
-import { log } from '@/lib/core/debug/unified-logger';
+import { log } from '@/lib/core/debug/server-logger';
 import { emailService } from '../email';
 import { pushService } from '../push-notifications';
 import { db } from '@/src/db';

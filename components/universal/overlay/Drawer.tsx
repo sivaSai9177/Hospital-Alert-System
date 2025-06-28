@@ -5,7 +5,6 @@ import {
   TouchableWithoutFeedback,
   TouchableOpacity,
   Pressable,
-  Animated,
   PanResponder,
   Dimensions,
   Platform,
@@ -13,23 +12,9 @@ import {
   ScrollView,
   ViewStyle,
   StyleSheet,
-  Text,
+  Text as RNText,
+  Animated,
 } from 'react-native';
-import ReAnimated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  runOnJS,
-  useAnimatedGestureHandler,
-  interpolate,
-  Extrapolate,
-} from 'react-native-reanimated';
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-  GestureHandlerRootView,
-} from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Symbol } from '@/components/universal/display/Symbols';
 import { useSpacing } from '@/lib/stores/spacing-store';
@@ -40,9 +25,8 @@ import { Text as UniversalText } from '@/components/universal/typography/Text';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const AnimatedView = ReAnimated.View;
-const AnimatedPressable = ReAnimated.createAnimatedComponent(Pressable);
-const AnimatedTouchableOpacity = ReAnimated.createAnimatedComponent(TouchableOpacity);
+const AnimatedView = Animated.View;
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 export type DrawerAnimationType = 'slide' | 'fade' | 'scale' | 'none';
 
@@ -69,6 +53,9 @@ export interface DrawerProps {
     duration?: number;
     spring?: { damping: number; stiffness: number };
   };
+  
+  // New prop to disable Modal wrapper
+  disableModal?: boolean;
 }
 
 const DRAWER_SIZES = {
@@ -101,15 +88,13 @@ export const Drawer = React.forwardRef<View, DrawerProps>(
       animationType = 'slide',
       useHaptics = true,
       animationConfig,
+      disableModal = false,
     },
     ref
   ) => {
     const { spacing } = useSpacing();
     const { shouldAnimate } = useAnimationStore();
     const insets = useSafeAreaInsets();
-    
-    const translateValue = useRef(new Animated.Value(0)).current;
-    const overlayOpacity = useRef(new Animated.Value(0)).current;
     
     const getDrawerSize = () => {
       if (size === 'full') return position === 'left' || position === 'right' ? SCREEN_WIDTH : SCREEN_HEIGHT;
@@ -134,75 +119,39 @@ export const Drawer = React.forwardRef<View, DrawerProps>(
       }
     };
     
+    console.log('[Drawer] Drawer size:', drawerSize, 'position:', position, 'initial translate:', getInitialTranslateValue());
+    
+    // Use React Native Animated API
+    const translateX = useRef(new Animated.Value(getInitialTranslateValue())).current;
+    const overlayOpacity = useRef(new Animated.Value(0)).current;
+    const [backdropEnabled, setBackdropEnabled] = React.useState(false);
+    
+    // Add listener for debugging
+    useEffect(() => {
+      const listener = translateX.addListener(({ value }) => {
+        console.log('[Drawer] translateX value:', value);
+      });
+      return () => translateX.removeListener(listener);
+    }, [translateX]);
+    
+    // For now, disable pan responder to simplify debugging
     const panResponder = useRef(
       PanResponder.create({
-        onStartShouldSetPanResponder: () => swipeEnabled,
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          if (!swipeEnabled) return false;
-          
-          const { dx, dy } = gestureState;
-          switch (position) {
-            case 'left':
-              return dx < -10;
-            case 'right':
-              return dx > 10;
-            case 'top':
-              return dy < -10;
-            case 'bottom':
-              return dy > 10;
-            default:
-              return false;
-          }
-        },
-        onPanResponderMove: (_, gestureState) => {
-          const { dx, dy } = gestureState;
-          let value = 0;
-          
-          switch (position) {
-            case 'left':
-              value = Math.min(0, dx);
-              break;
-            case 'right':
-              value = Math.max(0, dx);
-              break;
-            case 'top':
-              value = Math.min(0, dy);
-              break;
-            case 'bottom':
-              value = Math.max(0, dy);
-              break;
-          }
-          
-          translateValue.setValue(value);
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          const { dx, dy, vx, vy } = gestureState;
-          const shouldClose = 
-            (position === 'left' && (dx < -SWIPE_THRESHOLD || vx < -SWIPE_VELOCITY_THRESHOLD)) ||
-            (position === 'right' && (dx > SWIPE_THRESHOLD || vx > SWIPE_VELOCITY_THRESHOLD)) ||
-            (position === 'top' && (dy < -SWIPE_THRESHOLD || vy < -SWIPE_VELOCITY_THRESHOLD)) ||
-            (position === 'bottom' && (dy > SWIPE_THRESHOLD || vy > SWIPE_VELOCITY_THRESHOLD));
-          
-          if (shouldClose) {
-            handleClose();
-          } else {
-            Animated.timing(translateValue, {
-              toValue: 0,
-              duration: animationDuration / 2,
-              useNativeDriver: true,
-            }).start();
-          }
-        },
+        onStartShouldSetPanResponder: () => false,
       })
     ).current;
     
     const handleClose = useCallback(() => {
+      console.log('[Drawer] handleClose called');
       // Haptic feedback for drawer close
       if (useHaptics && Platform.OS !== 'web') {
         haptic('light');
       }
+      
+      setBackdropEnabled(false);
+      
       Animated.parallel([
-        Animated.timing(translateValue, {
+        Animated.timing(translateX, {
           toValue: getInitialTranslateValue(),
           duration: animationDuration,
           useNativeDriver: true,
@@ -215,13 +164,25 @@ export const Drawer = React.forwardRef<View, DrawerProps>(
       ]).start(() => {
         onClose();
       });
-    }, [animationDuration, onClose, overlayOpacity, translateValue, useHaptics]);
+    }, [animationDuration, onClose, overlayOpacity, translateX, useHaptics]);
     
     useEffect(() => {
+      const initialValue = getInitialTranslateValue();
+      console.log('[Drawer] visible changed:', visible, 'initial value:', initialValue);
+      
       if (visible) {
-        translateValue.setValue(getInitialTranslateValue());
+        // Reset position first (important for Android)
+        translateX.setValue(initialValue);
+        overlayOpacity.setValue(0);
+        
+        // Disable backdrop initially
+        setBackdropEnabled(false);
+        
+        console.log('[Drawer] Starting open animation from', initialValue, 'to 0');
+        
+        // Open drawer
         Animated.parallel([
-          Animated.timing(translateValue, {
+          Animated.timing(translateX, {
             toValue: 0,
             duration: animationDuration,
             useNativeDriver: true,
@@ -231,9 +192,20 @@ export const Drawer = React.forwardRef<View, DrawerProps>(
             duration: animationDuration,
             useNativeDriver: true,
           }),
-        ]).start();
+        ]).start((finished) => {
+          console.log('[Drawer] Open animation complete, finished:', finished);
+          if (finished) {
+            setBackdropEnabled(true);
+            console.log('[Drawer] Backdrop enabled');
+          }
+        });
+      } else {
+        // Reset states when closing
+        setBackdropEnabled(false);
+        translateX.setValue(initialValue);
+        overlayOpacity.setValue(0);
       }
-    }, [visible, animationDuration, overlayOpacity, translateValue]);
+    }, [visible, animationDuration, overlayOpacity, translateX]);
     
     useEffect(() => {
       if (Platform.OS === 'web' && closeOnEscape) {
@@ -253,12 +225,14 @@ export const Drawer = React.forwardRef<View, DrawerProps>(
       const baseStyle: ViewStyle = {
         position: 'absolute',
         backgroundColor: '#ffffff',
+        zIndex: 10001,
+        elevation: 999,
         ...Platform.select({
           ios: {
             boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
           },
           android: {
-            elevation: 16,
+            elevation: 999,
           },
           default: {
             boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
@@ -306,16 +280,10 @@ export const Drawer = React.forwardRef<View, DrawerProps>(
       }
     };
     
-    const getTransformStyle = (): any => {
-      if (position === 'left' || position === 'right') {
-        return {
-          transform: [{ translateX: translateValue }],
-        };
-      } else {
-        return {
-          transform: [{ translateY: translateValue }],
-        };
-      }
+    // Get transform style for drawer
+    const getTransformStyle = () => {
+      // Return empty object - we'll apply transform directly
+      return {};
     };
     
     const renderHandle = () => {
@@ -323,98 +291,93 @@ export const Drawer = React.forwardRef<View, DrawerProps>(
       
       const isHorizontal = position === 'left' || position === 'right';
       
-      const AnimatedHandle = () => {
-        const pulseValue = useSharedValue(0.3);
-        
-        useEffect(() => {
-          if (animated && isAnimated && shouldAnimate()) {
-            // Subtle pulse animation for the handle
-            pulseValue.value = withTiming(0.5, { duration: 1000 }, () => {
-              pulseValue.value = withTiming(0.3, { duration: 1000 });
-            });
-          }
-        }, []);
-        
-        const animatedHandleStyle = useAnimatedStyle(() => ({
-          opacity: pulseValue.value,
-        }));
-        
-        const handleStyle: ViewStyle = {
-          borderRadius: 2 as any,
-          alignSelf: 'center',
-          marginVertical: isHorizontal ? 0 : spacing[2],
-          marginHorizontal: isHorizontal ? spacing[2] : 0,
-          ...(isHorizontal
-            ? { width: 4, height: 40 }
-            : { width: 40, height: 4 }),
-        };
-        
-        return (
-          <AnimatedView 
-            className="bg-muted-foreground"
-            style={[
-              handleStyle,
-              animated && shouldAnimate() ? animatedHandleStyle : { opacity: 0.3 as any },
-            ]} 
-          />
-        );
+      const handleStyle: ViewStyle = {
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginVertical: isHorizontal ? 0 : spacing[2],
+        marginHorizontal: isHorizontal ? spacing[2] : 0,
+        backgroundColor: '#999',
+        opacity: 0.3,
+        ...(isHorizontal
+          ? { width: 4, height: 40 }
+          : { width: 40, height: 4 }),
       };
       
-      return <AnimatedHandle />;
+      return <View style={handleStyle} />;
     };
     
-    if (!visible) return null;
+    if (!visible) {
+      console.log('[Drawer] Not rendering - not visible');
+      return null;
+    }
+    
+    console.log('[Drawer] Rendering drawer with style:', getDrawerStyle());
+    
+    const drawerContent = (
+      <View style={[StyleSheet.absoluteFillObject, { zIndex: 9999, elevation: 998 }]}>
+        <TouchableWithoutFeedback
+          onPress={closeOnBackdrop && backdropEnabled ? handleClose : undefined}
+          disabled={!closeOnBackdrop || !backdropEnabled}
+        >
+          <AnimatedView
+            style={[
+              StyleSheet.absoluteFillObject,
+              {
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                opacity: overlayOpacity,
+                zIndex: 9998,
+              },
+              overlayStyle,
+            ]}
+          />
+        </TouchableWithoutFeedback>
+        
+        <AnimatedView
+          ref={ref}
+          style={[
+            getDrawerStyle(),
+            { 
+              backgroundColor: '#ffffff',
+              zIndex: 10002,
+              elevation: 1000,
+            },
+            {
+              transform: position === 'left' || position === 'right'
+                ? [{ translateX: translateX }]
+                : [{ translateY: translateX }],
+            },
+            style
+          ]}
+          {...panResponder.panHandlers}
+        >
+          {(position === 'right' || position === 'bottom') && renderHandle()}
+          
+          <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
+            {children}
+          </View>
+          
+          {(position === 'left' || position === 'top') && renderHandle()}
+        </AnimatedView>
+      </View>
+    );
+    
+    if (disableModal) {
+      return drawerContent;
+    }
     
     return (
       <Modal
         visible={visible}
-        transparent
-        statusBarTranslucent
+        transparent={true}
+        statusBarTranslucent={true}
         animationType="none"
-        onRequestClose={handleClose}
+        presentationStyle="overFullScreen"
+        onShow={() => {
+          console.log('[Drawer] Modal onShow called');
+        }}
         testID={testID}
       >
-        <View style={StyleSheet.absoluteFillObject}>
-          <TouchableWithoutFeedback
-            onPress={closeOnBackdrop ? handleClose : undefined}
-            disabled={!closeOnBackdrop}
-          >
-            <Animated.View
-              style={[
-                StyleSheet.absoluteFillObject,
-                {
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                  opacity: overlayOpacity,
-                },
-                overlayStyle,
-              ]}
-            />
-          </TouchableWithoutFeedback>
-          
-          <Animated.View
-            ref={ref}
-            style={[getDrawerStyle(), getTransformStyle(), style] as any}
-            {...panResponder.panHandlers}
-          >
-            {(position === 'right' || position === 'bottom') && renderHandle()}
-            
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-              style={{ flex: 1 }}
-            >
-              <ScrollView
-                contentContainerStyle={{ flexGrow: 1 }}
-                showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-              >
-                {children}
-              </ScrollView>
-            </KeyboardAvoidingView>
-            
-            {(position === 'left' || position === 'top') && renderHandle()}
-          </Animated.View>
-        </View>
+        {drawerContent}
       </Modal>
     );
   }
@@ -441,25 +404,6 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
   useHaptics = true,
 }) => {
   const { spacing } = useSpacing();
-  const { shouldAnimate } = useAnimationStore();
-  
-  // Animation values for close button
-  const closeButtonScale = useSharedValue(1);
-  const closeButtonRotation = useSharedValue(0);
-  
-  const handlePressIn = () => {
-    if (animated && shouldAnimate()) {
-      closeButtonScale.value = withSpring(0.8, { damping: 15, stiffness: 400 });
-      closeButtonRotation.value = withSpring(90, { damping: 15, stiffness: 400 });
-    }
-  };
-  
-  const handlePressOut = () => {
-    if (animated && shouldAnimate()) {
-      closeButtonScale.value = withSpring(1, { damping: 20, stiffness: 300 });
-      closeButtonRotation.value = withSpring(0, { damping: 20, stiffness: 300 });
-    }
-  };
   
   const handleClose = () => {
     if (useHaptics && Platform.OS !== 'web') {
@@ -467,13 +411,6 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
     }
     onClose?.();
   };
-  
-  const animatedCloseButtonStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: closeButtonScale.value },
-      { rotate: `${closeButtonRotation.value}deg` },
-    ] as any,
-  }));
   
   return (
     <View
@@ -489,29 +426,20 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
       {children || (
         <>
           {title && (
-            <Text size="lg" weight="semibold" className="text-foreground">
+            <UniversalText size="lg" weight="semibold" className="text-foreground">
               {title}
-            </Text>
+            </UniversalText>
           )}
           {onClose && (
-            <AnimatedTouchableOpacity
+            <TouchableOpacity
               onPress={handleClose}
-              onPressIn={handlePressIn}
-              onPressOut={handlePressOut}
-              style={[
-                {
-                  padding: spacing[2] as any,
-                  borderRadius: spacing[2],
-                },
-                animated && shouldAnimate() ? animatedCloseButtonStyle : {},
-                Platform.OS === 'web' && {
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                } as any,
-              ]}
+              style={{
+                padding: spacing[2],
+                borderRadius: spacing[2],
+              }}
             >
               <Symbol name="xmark" size={24} className="text-muted-foreground" />
-            </AnimatedTouchableOpacity>
+            </TouchableOpacity>
           )}
         </>
       )}

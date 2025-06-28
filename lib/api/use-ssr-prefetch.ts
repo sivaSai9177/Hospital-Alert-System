@@ -101,6 +101,13 @@ export function useClientPrefetch() {
           utils.healthcare.getMetrics.prefetch();
         }
         break;
+        
+      case '/alerts/escalation-queue':
+        // Prefetch escalation queue data
+        if (params.hospitalId && typeof params.hospitalId === 'string') {
+          utils.healthcare.getActiveAlerts.prefetch({ hospitalId: params.hospitalId });
+        }
+        break;
     }
   }, [pathname, params, utils]);
 }

@@ -35,7 +35,7 @@ interface AlertCardOptimizedProps {
   alert: AlertListItem;
   index: number;
   onPress?: () => void;
-  onAcknowledge?: (alertId: string) => Promise<void>;
+  onAcknowledge?: (alertId: string) => void;
   onResolve?: (alertId: string) => Promise<void>;
   canAcknowledge?: boolean;
   canResolve?: boolean;
@@ -236,16 +236,11 @@ export const AlertCardOptimized = memo<AlertCardOptimizedProps>(({
     onPress?.();
   }, [onPress]);
   
-  const handleAcknowledge = useCallback(async () => {
+  const handleAcknowledge = useCallback(() => {
     if (!canAcknowledge) return;
     
     haptic('medium');
-    try {
-      await onAcknowledge?.(alert.id);
-      haptic('success');
-    } catch (error) {
-      haptic('error');
-    }
+    onAcknowledge?.(alert.id);
   }, [canAcknowledge, onAcknowledge, alert.id]);
   
   const highlightStyle = useAnimatedStyle(() => ({

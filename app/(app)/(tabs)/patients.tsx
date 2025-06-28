@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ScrollView, RefreshControl, Platform, ActivityIndicator } from 'react-native';
+import { ScrollView, RefreshControl, Platform, ActivityIndicator, View } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   VStack,
   HStack,
@@ -19,6 +18,7 @@ import { useTheme } from '@/lib/theme/provider';
 import { useSpacing } from '@/lib/stores/spacing-store';
 import { ActivePatients } from '@/components/blocks/healthcare';
 import { Symbol } from '@/components/universal/display/Symbols';
+import { EmptyState } from '@/components/universal/feedback/EmptyState';
 import { useHealthcareAccess } from '@/hooks/usePermissions';
 import { ApiErrorBoundary } from '@/components/blocks/errors/ApiErrorBoundary';
 import { useHospitalContext, usePatients } from '@/hooks/healthcare';
@@ -26,6 +26,7 @@ import { useSSRPrefetchHealthcare } from '@/lib/api/use-ssr-prefetch';
 import { haptic } from '@/lib/ui/haptics';
 import { log } from '@/lib/core/debug/unified-logger';
 import { api } from '@/lib/api/trpc';
+import { UnifiedHeader } from '@/components/blocks/navigation/UnifiedHeader';
 
 // Define Patient type locally until API is ready
 interface Patient {
@@ -122,7 +123,7 @@ function PatientsScreenContent() {
   // Show simple message if hospital is missing (non-blocking)
   if (!hospitalContext.hospitalId) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <View style={{ flex: 1, backgroundColor: theme.background }}>
         <Container>
           <VStack p={4} gap={4 as any}>
             <Card>
@@ -148,14 +149,14 @@ function PatientsScreenContent() {
             </Card>
           </VStack>
         </Container>
-      </SafeAreaView>
+      </View>
     );
   }
   
   // Return early if no valid hospital
   if (!hospitalContext.hospitalId) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <View style={{ flex: 1, backgroundColor: theme.background }}>
         <Container>
           <VStack p={4} gap={4 as any} alignItems="center" justifyContent="center" style={{ flex: 1 }}>
             <Text size="base" weight="semibold">Unable to Access Patients</Text>
@@ -167,7 +168,7 @@ function PatientsScreenContent() {
             </Button>
           </VStack>
         </Container>
-      </SafeAreaView>
+      </View>
     );
   }
   
@@ -175,7 +176,7 @@ function PatientsScreenContent() {
   // Check permissions
   if (!canViewPatients || !isMedicalStaff) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <View style={{ flex: 1, backgroundColor: theme.background }}>
         <Container>
           <VStack p={4} gap={4 as any} alignItems="center" justifyContent="center" style={{ flex: 1 }}>
             <Text size="base">Access Restricted</Text>
@@ -190,7 +191,7 @@ function PatientsScreenContent() {
             </Button>
           </VStack>
         </Container>
-      </SafeAreaView>
+      </View>
     );
   }
   
@@ -209,33 +210,6 @@ function PatientsScreenContent() {
   
   const content = (
     <VStack gap={4 as any}>
-      {/* Header */}
-      <HStack justifyContent="space-between" alignItems="center">
-        <Box>
-          <Text size="2xl" weight="bold">My Patients</Text>
-          <Text size="sm" colorTheme="mutedForeground">
-            Manage and monitor patient care
-          </Text>
-        </Box>
-        <HStack gap={2 as any} alignItems="center">
-          <Badge variant="outline" size="md">
-            {`${filteredPatients.length} Active`}
-          </Badge>
-          {canCreatePatients && (
-            <Button
-              variant="default"
-              size="sm"
-              onPress={() => {
-                haptic('light');
-                router.push('/register-patient' as any);
-              }}
-            >
-              <Symbol name="plus" size={16} color="white" />
-              <Text style={{ color: 'white' }}>Register</Text>
-            </Button>
-          )}
-        </HStack>
-      </HStack>
       
       {/* Search and Filters */}
       <Card>
@@ -270,18 +244,27 @@ function PatientsScreenContent() {
       
       {/* Individual Patient Cards */}
       {filteredPatients.length === 0 && (
-        <Card>
-          <Box p={8} alignItems="center">
-            <VStack gap={2 as any} alignItems="center">
-              <Text size="base" weight="semibold">No patients found</Text>
-              <Text colorTheme="mutedForeground">
-                {searchQuery || departmentFilter !== 'all'
-                  ? 'Try adjusting your filters'
-                  : 'You have no assigned patients'}
-              </Text>
-            </VStack>
-          </Box>
-        </Card>
+        <EmptyState
+          variant={searchQuery || departmentFilter !== 'all' ? 'no-results' : 'no-patients'}
+          title={searchQuery || departmentFilter !== 'all' ? 'No patients found' : 'No assigned patients'}
+          description={
+            searchQuery || departmentFilter !== 'all'
+              ? 'Try adjusting your search or filters'
+              : 'You have no patients assigned to you at the moment'
+          }
+          actions={
+            searchQuery || departmentFilter !== 'all'
+              ? [{
+                  label: 'Clear filters',
+                  onPress: () => {
+                    setSearchQuery('');
+                    setDepartmentFilter('all');
+                  },
+                  variant: 'outline'
+                }]
+              : undefined
+          }
+        />
       )}
       
       {/* Show offline indicator */}
@@ -301,39 +284,87 @@ function PatientsScreenContent() {
   // Handle loading state
   if (isLoading && !data && !cachedData) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <View style={{ flex: 1, backgroundColor: theme.background }}>
         <Container>
           <VStack p={4} gap={4 as any} alignItems="center" justifyContent="center" style={{ flex: 1 }}>
             <ActivityIndicator size="large" color={theme.primary} />
             <Text mt={4} colorTheme="mutedForeground">Loading patients...</Text>
           </VStack>
         </Container>
-      </SafeAreaView>
+      </View>
     );
   }
   
   if (Platform.OS !== 'web') {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-        <ScrollView
-          contentContainerStyle={{ padding: spacing[4] as any, paddingBottom: spacing[6] as any }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor={theme.primary}
-            />
-          }
-        >
-          {content}
-        </ScrollView>
-      </SafeAreaView>
+      <View style={{ flex: 1, backgroundColor: theme.background }}>
+        <UnifiedHeader 
+            title="My Patients"
+            subtitle="Manage and monitor patient care"
+            rightElement={
+              <HStack gap={2 as any} alignItems="center">
+                <Badge variant="outline" size="md">
+                  {`${filteredPatients.length} Active`}
+                </Badge>
+                {canCreatePatients && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onPress={() => {
+                      haptic('light');
+                      router.push('/register-patient' as any);
+                    }}
+                  >
+                    <Symbol name="plus" size={16} color="white" />
+                    <Text style={{ color: 'white' }}>Register</Text>
+                  </Button>
+                )}
+              </HStack>
+            }
+          />
+          <ScrollView
+            contentContainerStyle={{ padding: spacing[4] as any, paddingBottom: spacing[6] as any }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={theme.primary}
+              />
+            }
+          >
+            {content}
+          </ScrollView>
+      </View>
     );
   }
   
   return (
     <Container>
+      <UnifiedHeader 
+        title="My Patients"
+        subtitle="Manage and monitor patient care"
+        rightElement={
+          <HStack gap={2 as any} alignItems="center">
+            <Badge variant="outline" size="md">
+              {`${filteredPatients.length} Active`}
+            </Badge>
+            {canCreatePatients && (
+              <Button
+                variant="default"
+                size="sm"
+                onPress={() => {
+                  haptic('light');
+                  router.push('/register-patient' as any);
+                }}
+              >
+                <Symbol name="plus" size={16} color="white" />
+                <Text style={{ color: 'white' }}>Register</Text>
+              </Button>
+            )}
+          </HStack>
+        }
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={

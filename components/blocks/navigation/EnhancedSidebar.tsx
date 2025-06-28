@@ -112,6 +112,7 @@ export function EnhancedSidebar({ children }: EnhancedSidebarProps) {
   
   const { data: notifications } = useUnreadNotifications({
     refetchInterval: 60000,
+    enabled: !!user,
   });
   
   // Debounced search
@@ -297,8 +298,11 @@ export function EnhancedSidebar({ children }: EnhancedSidebarProps) {
       }
     };
     
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    // Only add event listeners on web
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      window.addEventListener('keydown', handleKeyPress);
+      return () => window.removeEventListener('keydown', handleKeyPress);
+    }
   }, [router, canViewAlerts, canViewPatients]);
   
   // Animation values for sidebar
@@ -631,7 +635,7 @@ export function EnhancedSidebar({ children }: EnhancedSidebarProps) {
                 <Button
                   variant="outline"
                   size={isCollapsed ? "icon" : "default"}
-                  onPress={() => router.push('/create-alert')}
+                  onPress={() => router.push('/(modals)/create-alert')}
                   fullWidth={!isCollapsed}
                   animated={true}
                   className="border-destructive hover:bg-destructive/10 hover:border-destructive/60 transition-all"
@@ -791,6 +795,9 @@ interface FloatingSubmenuProps {
 
 function FloatingSubmenu({ items, position, onClose, onNavigate, theme, spacing }: FloatingSubmenuProps) {
   React.useEffect(() => {
+    // Only add event listeners on web
+    if (Platform.OS !== 'web') return;
+    
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest('.floating-submenu')) {
@@ -798,8 +805,10 @@ function FloatingSubmenu({ items, position, onClose, onNavigate, theme, spacing 
       }
     };
     
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    if (typeof document !== 'undefined' && document.addEventListener) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
   }, [onClose]);
   
   return (
@@ -934,8 +943,11 @@ function CommandPalette({ isOpen, onClose, items, onNavigate }: CommandPalettePr
       }
     };
     
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    // Only add event listeners on web
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
   }, [isOpen, selectedIndex, filteredItems, onNavigate, onClose]);
   
   if (!isOpen) return null;

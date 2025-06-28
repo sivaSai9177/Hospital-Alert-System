@@ -163,11 +163,18 @@ class EmailService {
   private async loadTemplates() {
     // Import and register all templates
     try {
-      // Only load templates that exist
+      // Load healthcare alert template
       const alertTemplate = await import('./email-templates/healthcare/alert-notification');
       if (alertTemplate.default) {
         this.templates.set('healthcare.alert', alertTemplate.default);
         this.templates.set('alert-notification', alertTemplate.default); // For backward compatibility
+      }
+
+      // Load auth verification template
+      const verifyEmailTemplate = await import('./email-templates/auth/verify-email');
+      if (verifyEmailTemplate.default) {
+        this.templates.set('auth.verify', verifyEmailTemplate.default);
+        this.templates.set('verify-email', verifyEmailTemplate.default); // For backward compatibility
       }
 
       log.info(`Loaded ${this.templates.size} email templates`, 'EMAIL');
@@ -246,8 +253,15 @@ class EmailService {
       if (typeof field === 'function') {
         return field(data);
       }
-      // Simple template interpolation
-      return field.replace(/\{\{(\w+)\}\}/g, (match, key) => data[key] || match);
+      // Simple template interpolation with nested property support
+      return field.replace(/\{\{([\w.]+)\}\}/g, (match, key) => {
+        const keys = key.split('.');
+        let value = data;
+        for (const k of keys) {
+          value = value?.[k];
+        }
+        return value !== undefined ? value : match;
+      });
     };
 
     return {

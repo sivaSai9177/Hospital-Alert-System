@@ -6,11 +6,24 @@
 export const ROUTES = {
   // Auth routes
   auth: {
-    login: '/(public)/auth/login' as const,
-    register: '/(public)/auth/register' as const,
-    forgotPassword: '/(public)/auth/forgot-password' as const,
-    verifyEmail: '/(public)/auth/verify-email' as const,
-    completeProfile: '/(public)/auth/complete-profile' as const,
+    login: '/auth/login' as const,
+    register: '/auth/register' as const,
+    forgotPassword: '/auth/forgot-password' as const,
+    verifyEmail: '/auth/verify-email' as const,
+    completeProfile: '/auth/complete-profile' as const,
+  },
+  
+  // Onboarding routes
+  onboarding: {
+    welcome: '/onboarding/welcome' as const,
+    roleSelection: '/onboarding/role-selection' as const,
+    registration: '/onboarding/registration' as const,
+    emailVerification: '/onboarding/email-verification' as const,
+    profileSetup: '/onboarding/profile-setup' as const,
+    hospitalSetup: '/onboarding/hospital-setup' as const,
+    departmentSetup: '/onboarding/department-setup' as const,
+    permissions: '/onboarding/permissions' as const,
+    completion: '/onboarding/completion' as const,
   },
   
   // Main app tabs
@@ -103,11 +116,11 @@ export const ROUTES = {
   
   // Route groupings for easier access
   PUBLIC: {
-    login: '/(public)/auth/login' as const,
-    register: '/(public)/auth/register' as const,
-    forgotPassword: '/(public)/auth/forgot-password' as const,
-    verifyEmail: '/(public)/auth/verify-email' as const,
-    completeProfile: '/(public)/auth/complete-profile' as const,
+    login: '/auth/login' as const,
+    register: '/auth/register' as const,
+    forgotPassword: '/auth/forgot-password' as const,
+    verifyEmail: '/auth/verify-email' as const,
+    completeProfile: '/auth/complete-profile' as const,
     index: '/' as const,
   },
   

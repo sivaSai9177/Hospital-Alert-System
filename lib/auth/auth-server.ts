@@ -9,12 +9,22 @@ import 'dotenv/config';
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 // import { expo } from "@better-auth/expo"; // Temporarily disabled
-import { oAuthProxy, organization, admin, magicLink, twoFactor, passkey, bearer, multiSession } from "better-auth/plugins";
+import { 
+  oAuthProxy, 
+  organization, 
+  admin, 
+  magicLink, 
+  twoFactor, 
+  bearer, 
+  multiSession,
+  emailOTP,
+  phoneNumber
+} from "better-auth/plugins";
 import { db } from "@/src/db";
 import * as schema from "@/src/db/schema";
-// import { emailService } from "@/src/server/services/email-index";
+import { emailService } from "@/src/server/services/email";
 // import { notificationService, NotificationType, Priority } from "@/src/server/services/notifications";
-import crypto from "crypto";
+import * as crypto from "crypto";
 
 // Import server-safe logger
 import { logger } from '@/lib/core/debug/server-logger';
@@ -211,12 +221,78 @@ export const auth = betterAuth({
         'free': 5,
         'pro': 50,
         'enterprise': -1,
+      },
+      // Configure organization roles for healthcare
+      roles: {
+        admin: {},
+        head_doctor: {},
+        doctor: {},
+        nurse: {},
+        operator: {},
+        member: {},
       }
     }),
     admin({
       defaultRole: 'user',
       adminUserIds: process.env.ADMIN_USER_IDS?.split(',') || []
-    })
+    }),
+    // Email OTP for verification
+    emailOTP({
+      sendVerificationOtp: async ({ email, otp, type }) => {
+        logger.auth.info('Sending email OTP', { email, type });
+        
+        try {
+          await emailService.send({
+            to: email,
+            subject: type === 'sign-in' ? 'Sign in to Hospital Alert System' : 'Verify your email',
+            template: 'auth.verify',
+            data: {
+              name: email.split('@')[0],
+              code: otp,
+              type,
+            },
+          });
+        } catch (error) {
+          logger.auth.error('Failed to send OTP email', error);
+          throw new Error('Failed to send verification email');
+        }
+      },
+      otpLength: 6,
+      expiresIn: 15 * 60, // 15 minutes
+    }),
+    // Phone number for SMS alerts
+    phoneNumber(),
+    // Two-factor authentication for healthcare staff
+    twoFactor({
+      issuer: 'Hospital Alert System',
+      // Automatically enable for healthcare roles
+      backupCodeCount: 8,
+    }),
+    // Magic link for passwordless sign-in
+    magicLink({
+      sendMagicLink: async ({ email, url }) => {
+        logger.auth.info('Sending magic link', { email });
+        
+        try {
+          await emailService.send({
+            to: email,
+            subject: 'Sign in to Hospital Alert System',
+            html: `
+              <h2>Sign in to Hospital Alert System</h2>
+              <p>Click the link below to sign in:</p>
+              <a href="${url}" style="background-color: #FF1493; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Sign In</a>
+              <p>This link will expire in 15 minutes.</p>
+              <p>If you didn't request this, please ignore this email.</p>
+            `,
+            text: `Sign in to Hospital Alert System\n\nClick here to sign in: ${url}\n\nThis link will expire in 15 minutes.`,
+          });
+        } catch (error) {
+          logger.auth.error('Failed to send magic link', error);
+          throw new Error('Failed to send magic link email');
+        }
+      },
+      expiresIn: 15 * 60, // 15 minutes
+    }),
   ],
   
   // Trusted origins for CORS

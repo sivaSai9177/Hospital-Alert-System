@@ -23,6 +23,8 @@ import { showErrorAlert, showSuccessAlert } from '@/lib/core/alert';
 import { format } from 'date-fns';
 import { Symbol } from '@/components/universal/display/Symbols';
 import { EscalationTimeline } from '@/components/blocks/healthcare/alerts/EscalationTimeline';
+import { AlertAcknowledgeDialog } from '@/components/blocks/healthcare/alerts/AlertAcknowledgeDialog';
+import { useAlertWebSocket } from '@/hooks/healthcare/useAlertWebSocket';
 import type { Alert } from '@/types/alert';
 
 export default function AlertDetailScreen() {
@@ -32,6 +34,7 @@ export default function AlertDetailScreen() {
   const theme = useTheme();
   const { spacing } = useSpacing();
   const shadowMd = useShadow({ size: 'md' });
+  const [showAcknowledgeDialog, setShowAcknowledgeDialog] = React.useState(false);
   
   const role = user?.role;
   
@@ -39,6 +42,28 @@ export default function AlertDetailScreen() {
     { alertId: id as string },
     { enabled: !!id }
   );
+  
+  // Subscribe to WebSocket updates for this alert
+  useAlertWebSocket({
+    hospitalId: alert?.hospitalId || '',
+    enabled: !!alert?.hospitalId && alert?.status === 'active',
+    onAlertEscalated: (event) => {
+      if (event.alertId === id) {
+        refetch(); // Refetch alert data when escalation happens
+      }
+    },
+    onAlertAcknowledged: (event) => {
+      if (event.alertId === id) {
+        refetch();
+      }
+    },
+    onAlertResolved: (event) => {
+      if (event.alertId === id) {
+        refetch();
+      }
+    },
+    showNotifications: false, // Don't show notifications on details page
+  });
   
   const acknowledgeMutation = api.healthcare.acknowledgeAlert.useMutation({
     onSuccess: () => {
@@ -60,9 +85,13 @@ export default function AlertDetailScreen() {
     },
   });
   
-  const handleAcknowledge = () => {
+  const handleAcknowledge = async (data: Parameters<typeof acknowledgeMutation.mutateAsync>[0]) => {
+    await acknowledgeMutation.mutateAsync(data);
+  };
+  
+  const handleOpenAcknowledgeDialog = () => {
     haptic('medium');
-    acknowledgeMutation.mutate({ alertId: id as string });
+    setShowAcknowledgeDialog(true);
   };
   
   const handleResolve = () => {
@@ -126,7 +155,7 @@ export default function AlertDetailScreen() {
                 <Text colorTheme="mutedForeground">{alert.alertType}</Text>
               </VStack>
               <Badge variant={urgencyColor as any} size="sm">
-                Level {alert.urgencyLevel}
+                <Text size="sm">Level {alert.urgencyLevel}</Text>
               </Badge>
             </HStack>
             
@@ -153,17 +182,17 @@ export default function AlertDetailScreen() {
             <HStack gap={2 as any}>
               {alert.acknowledgedAt && (
                 <Badge variant="outline">
-                  Acknowledged by {alert.acknowledgedBy}
+                  <Text size="sm">Acknowledged by {alert.acknowledgedBy}</Text>
                 </Badge>
               )}
               {alert.resolvedAt && (
                 <Badge variant="success">
-                  Resolved by {alert.resolvedBy}
+                  <Text size="sm">Resolved by {alert.resolvedBy}</Text>
                 </Badge>
               )}
               {!alert.acknowledgedAt && !alert.resolvedAt && (
                 <Badge variant="error">
-                  Active
+                  <Text size="sm">Active</Text>
                 </Badge>
               )}
             </HStack>
@@ -171,30 +200,38 @@ export default function AlertDetailScreen() {
         </Box>
       </Card>
       
-      {/* Escalation Timeline - Temporarily disabled due to type mismatch */}
-      {/* TODO: Fix type compatibility between API response and EscalationTimeline component */}
-      {false && alert.status === 'active' && alert.currentEscalationTier && (
+      {/* Escalation Timeline */}
+      {alert.status === 'active' && alert.currentEscalationTier && (
         <Card style={shadowMd}>
           <Box p={4 as any}>
-            {/* <EscalationTimeline
-              alert={alert}
-              escalations={alert.escalations}
+            <EscalationTimeline
+              alert={{
+                ...alert,
+                id: alert.id,
+                alertType: alert.alertType,
+                urgencyLevel: alert.urgencyLevel,
+                roomNumber: alert.roomNumber,
+                patientId: alert.patientId || '',
+                description: alert.description,
+                status: alert.status as 'active' | 'acknowledged' | 'resolved',
+                hospitalId: alert.hospitalId,
+                createdAt: new Date(alert.createdAt),
+                createdBy: alert.createdBy || '',
+                acknowledgedBy: alert.acknowledgedBy || undefined,
+                acknowledgedAt: alert.acknowledgedAt ? new Date(alert.acknowledgedAt) : undefined,
+                resolvedBy: alert.resolvedBy || undefined,
+                resolvedAt: alert.resolvedAt ? new Date(alert.resolvedAt) : undefined,
+                currentEscalationTier: alert.currentEscalationTier,
+                nextEscalationAt: alert.nextEscalationAt ? new Date(alert.nextEscalationAt) : null,
+                targetDepartment: alert.targetDepartment || undefined,
+              }}
+              escalations={alert.escalations?.map(esc => ({
+                ...esc,
+                escalatedAt: new Date(esc.escalatedAt),
+              })) || []}
               currentTier={alert.currentEscalationTier}
-              nextEscalationAt={alert.nextEscalationAt}
-            /> */}
-            <VStack gap={2 as any}>
-              <Text size="base" weight="semibold">Escalation Status</Text>
-              <HStack gap={2 as any} alignItems="center">
-                <Badge variant="warning" size="sm">
-                  Tier {alert.currentEscalationTier}
-                </Badge>
-                {alert.nextEscalationAt && (
-                  <Text size="sm" colorTheme="mutedForeground">
-                    Next escalation: {format(new Date(alert.nextEscalationAt), 'HH:mm')}
-                  </Text>
-                )}
-              </HStack>
-            </VStack>
+              nextEscalationAt={alert.nextEscalationAt ? new Date(alert.nextEscalationAt) : null}
+            />
           </Box>
         </Card>
       )}
@@ -221,10 +258,9 @@ export default function AlertDetailScreen() {
         <VStack gap={2 as any}>
           {!alert.acknowledgedAt && (role === 'doctor' || role === 'nurse' || role === 'head_doctor') && (
             <Button
-              onPress={handleAcknowledge}
+              onPress={handleOpenAcknowledgeDialog}
               variant="outline"
               fullWidth
-              isLoading={acknowledgeMutation.isPending}
             >
               Acknowledge Alert
             </Button>
@@ -257,6 +293,17 @@ export default function AlertDetailScreen() {
             </VStack>
           </Box>
         </Card>
+      )}
+      
+      {/* Acknowledge Dialog */}
+      {alert && (
+        <AlertAcknowledgeDialog
+          isOpen={showAcknowledgeDialog}
+          onClose={() => setShowAcknowledgeDialog(false)}
+          alert={alert}
+          onAcknowledge={handleAcknowledge}
+          isLoading={acknowledgeMutation.isPending}
+        />
       )}
     </VStack>
   );

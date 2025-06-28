@@ -296,6 +296,13 @@ export const COMPONENT_SIZES = {
   },
 } as const;
 
+// Generate spacing scales for each density
+export const spacingScales = {
+  compact: getSpacing('compact'),
+  medium: getSpacing('medium'),
+  large: getSpacing('large'),
+} as const;
+
 // Export all spacing configurations
 export const spacingTheme = {
   getSpacing,

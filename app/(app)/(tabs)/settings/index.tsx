@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Platform, Alert, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, Platform, Alert, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/lib/stores/auth-store';
@@ -30,6 +29,8 @@ import { SignOutButton } from '@/components/blocks/auth/SignOutButton/SignOutBut
 import { Symbol } from '@/components/universal/display/Symbols';
 import { api } from '@/lib/api/trpc';
 import { logger } from '@/lib/core/debug/unified-logger';
+import { UnifiedHeader } from '@/components/blocks/navigation/UnifiedHeader';
+import { useDebugStore } from '@/lib/stores/debug-store';
 
 export default function SettingsScreen() {
   const { user, setRefreshing, lastActivity } = useAuth();
@@ -39,6 +40,7 @@ export default function SettingsScreen() {
   const shadowMd = useShadow({ size: 'md' });
   const utils = api.useUtils();
   const [isManuallyRefreshing, setIsManuallyRefreshing] = React.useState(false);
+  const { showDebugPanel, showNavigationDebugger, toggleDebugPanel, toggleNavigationDebugger } = useDebugStore();
   
   // Use TanStack Query to manage session state with real-time updates
   const { data: sessionData } = useQuery({
@@ -176,42 +178,33 @@ export default function SettingsScreen() {
     onPress?: () => void;
     rightElement?: React.ReactNode;
   }) => (
-    <Card style={shadowMd}>
-      <TouchableOpacity
-        onPress={onPress}
-        disabled={!onPress}
-        style={{ padding: spacing[4] as any }}
-      >
-        <HStack alignItems="center" gap={3 as any}>
-          <Box>{icon}</Box>
-          <Box style={{ flex: 1 }}>
-            <Text weight="semibold">{title}</Text>
-            {subtitle && (
-              <Text size="sm" colorTheme="mutedForeground">{subtitle}</Text>
-            )}
-          </Box>
-          {rightElement || (onPress && <Symbol name="chevron.right" size={20} color={theme.mutedForeground} />)}
-        </HStack>
-      </TouchableOpacity>
-    </Card>
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={!onPress}
+      style={{ 
+        padding: spacing[4] as any,
+        backgroundColor: theme.card,
+        borderRadius: 8,
+        marginBottom: spacing[2],
+        borderWidth: 1,
+        borderColor: theme.border,
+      }}
+    >
+      <HStack alignItems="center" gap={3 as any}>
+        <Box>{icon}</Box>
+        <Box style={{ flex: 1 }}>
+          <Text weight="semibold">{title}</Text>
+          {subtitle && (
+            <Text size="sm" colorTheme="mutedForeground">{subtitle}</Text>
+          )}
+        </Box>
+        {rightElement || (onPress && <Symbol name="chevron.right" size={20} color={theme.mutedForeground} />)}
+      </HStack>
+    </TouchableOpacity>
   );
   
   const content = (
     <VStack gap={5 as any}>
-      {/* Header */}
-      <HStack justifyContent="space-between" alignItems="center">
-        <Box style={{ flex: 1 }}>
-          <Heading1>Settings</Heading1>
-          <Text colorTheme="mutedForeground">
-            Manage your preferences
-          </Text>
-        </Box>
-        <Avatar
-          source={user?.image ? { uri: user.image } : undefined}
-          name={user?.name || 'User'}
-          size="xl"
-        />
-      </HStack>
       
       {/* Account Section */}
       <VStack gap={2 as any}>
@@ -231,111 +224,115 @@ export default function SettingsScreen() {
         <Text size="sm" colorTheme="mutedForeground" weight="semibold" style={{ paddingLeft: 4 }}>
           SESSION MANAGEMENT
         </Text>
-        <Card style={shadowMd}>
-          <Box p={4 as any}>
-            <VStack gap={4 as any}>
-              {/* Session Status */}
-              <HStack justifyContent="space-between" alignItems="center">
-                <VStack gap={1 as any}>
-                  <Text weight="semibold">Session Status</Text>
-                  <HStack gap={2 as any} alignItems="center">
-                    <Box
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: sessionStatus.color,
-                      }}
-                    />
-                    <Text size="sm" style={{ color: sessionStatus.color }}>
-                      {sessionStatus.text}
-                    </Text>
-                  </HStack>
-                </VStack>
-                <VStack alignItems="flex-end" gap={1 as any}>
-                  <Text size="xs" colorTheme="mutedForeground">
-                    Refresh in
+        <View style={{
+          backgroundColor: theme.card,
+          borderRadius: 8,
+          padding: spacing[4] as any,
+          borderWidth: 1,
+          borderColor: theme.border,
+        }}>
+          <VStack gap={4 as any}>
+            {/* Session Status */}
+            <HStack justifyContent="space-between" alignItems="center">
+              <VStack gap={1 as any}>
+                <Text weight="semibold">Session Status</Text>
+                <HStack gap={2 as any} alignItems="center">
+                  <Box
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: sessionStatus.color,
+                    }}
+                  />
+                  <Text size="sm" style={{ color: sessionStatus.color }}>
+                    {sessionStatus.text}
                   </Text>
-                  <Text size="base" weight="bold" style={{ fontVariant: ['tabular-nums'] }}>
-                    {formatTime(sessionTimeRemaining)}
-                  </Text>
-                </VStack>
-              </HStack>
-              
-              {/* Progress Bar */}
+                </HStack>
+              </VStack>
+              <VStack alignItems="flex-end" gap={1 as any}>
+                <Text size="xs" colorTheme="mutedForeground">
+                  Refresh in
+                </Text>
+                <Text size="base" weight="bold" style={{ fontVariant: ['tabular-nums'] }}>
+                  {formatTime(sessionTimeRemaining)}
+                </Text>
+              </VStack>
+            </HStack>
+            
+            {/* Progress Bar */}
+            <Box
+              style={{
+                height: 6,
+                backgroundColor: theme.border,
+                borderRadius: 3,
+                overflow: 'hidden',
+              }}
+            >
               <Box
                 style={{
-                  height: 6,
-                  backgroundColor: theme.border,
-                  borderRadius: 3,
-                  overflow: 'hidden',
+                  height: '100%',
+                  width: `${sessionData?.percentRemaining || 0}%`,
+                  backgroundColor: sessionStatus.color,
+                  ...(Platform.OS === 'web' ? { transition: 'width 0.3s ease-out' } : {}),
                 }}
-              >
-                <Box
-                  style={{
-                    height: '100%',
-                    width: `${sessionData?.percentRemaining || 0}%`,
-                    backgroundColor: sessionStatus.color,
-                    ...(Platform.OS === 'web' ? { transition: 'width 0.3s ease-out' } : {}),
-                  }}
-                />
-              </Box>
-              
-              {/* Manual Refresh Button */}
+              />
+            </Box>
+            
+            {/* Manual Refresh Button */}
+            <Button
+              onPress={handleManualRefresh}
+              variant="outline"
+              fullWidth
+              disabled={isManuallyRefreshing}
+            >
+              <HStack gap={2 as any} alignItems="center">
+                <Symbol name="arrow.clockwise" size={16} color={theme.primary} />
+                <Text>{isManuallyRefreshing ? 'Refreshing...' : 'Refresh Session Now'}</Text>
+              </HStack>
+            </Button>
+            
+            {/* Debug: Force Activity Update */}
+            {__DEV__ && (
               <Button
-                onPress={handleManualRefresh}
-                variant="outline"
+                onPress={() => {
+                  sessionTimeoutManager.updateActivity();
+                  const { updateActivity } = useAuthStore.getState();
+                  updateActivity();
+                  logger.auth.debug('Manually updated activity timestamp', {
+                    newLastActivity: new Date(),
+                    remainingTime: sessionTimeoutManager.getRemainingTime()
+                  });
+                }}
+                variant="ghost"
+                size="sm"
                 fullWidth
-                disabled={isManuallyRefreshing}
               >
-                <HStack gap={2 as any} alignItems="center">
-                  <Symbol name="arrow.clockwise" size={16} color={theme.primary} />
-                  <Text>{isManuallyRefreshing ? 'Refreshing...' : 'Refresh Session Now'}</Text>
+                <HStack gap={1 as any} align="center">
+                  <Symbol name="hand.tap" size={14} color={theme.mutedForeground} />
+                  <Text size="xs" colorTheme="mutedForeground">Debug: Update Activity</Text>
                 </HStack>
               </Button>
+            )}
+            
+            {/* Session Info */}
+            <VStack gap={2 as any}>
+              <Text size="xs" colorTheme="mutedForeground" style={{ textAlign: 'center' }}>
+                Your session automatically refreshes after {(sessionData?.totalTimeoutMs || 300000) / 60000} minutes of inactivity
+              </Text>
               
-              {/* Debug: Force Activity Update */}
-              {__DEV__ && (
-                <Button
-                  onPress={() => {
-                    sessionTimeoutManager.updateActivity();
-                    const { updateActivity } = useAuthStore.getState();
-                    updateActivity();
-                    logger.auth.debug('Manually updated activity timestamp', {
-                      newLastActivity: new Date(),
-                      remainingTime: sessionTimeoutManager.getRemainingTime()
-                    });
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  fullWidth
-                >
-                  <HStack gap={1 as any} align="center">
-                    <Symbol name="hand.tap" size={14} color={theme.mutedForeground} />
-                    <Text size="xs" colorTheme="mutedForeground">Debug: Update Activity</Text>
-                  </HStack>
-                </Button>
+              {/* Last Activity Time */}
+              {lastActivity && (
+                <HStack justifyContent="center" gap={1 as any}>
+                  <Symbol name="clock" size={12} color={theme.mutedForeground} />
+                  <Text size="xs" colorTheme="mutedForeground">
+                    Last activity: {new Date(lastActivity).toLocaleTimeString()}
+                  </Text>
+                </HStack>
               )}
-              
-              {/* Session Info */}
-              <VStack gap={2 as any}>
-                <Text size="xs" colorTheme="mutedForeground" style={{ textAlign: 'center' }}>
-                  Your session automatically refreshes after {(sessionData?.totalTimeoutMs || 300000) / 60000} minutes of inactivity
-                </Text>
-                
-                {/* Last Activity Time */}
-                {lastActivity && (
-                  <HStack justifyContent="center" gap={1 as any}>
-                    <Symbol name="clock" size={12} color={theme.mutedForeground} />
-                    <Text size="xs" colorTheme="mutedForeground">
-                      Last activity: {new Date(lastActivity).toLocaleTimeString()}
-                    </Text>
-                  </HStack>
-                )}
-              </VStack>
             </VStack>
-          </Box>
-        </Card>
+          </VStack>
+        </View>
       </VStack>
       
       {/* Organization Section */}
@@ -364,16 +361,72 @@ export default function SettingsScreen() {
         <Text size="sm" colorTheme="mutedForeground" weight="semibold" style={{ paddingLeft: 4 }}>
           APPEARANCE
         </Text>
-        <Card style={shadowMd}>
-          <Box p={4 as any}>
-            <VStack gap={4 as any}>
-              <DarkModeToggle />
-              <ThemeSelector />
-              <SpacingDensitySelector />
-            </VStack>
-          </Box>
-        </Card>
+        <View style={{
+          backgroundColor: theme.card,
+          borderRadius: 8,
+          padding: spacing[4] as any,
+          borderWidth: 1,
+          borderColor: theme.border,
+        }}>
+          <VStack gap={4 as any}>
+            <DarkModeToggle />
+            <ThemeSelector />
+            <SpacingDensitySelector />
+          </VStack>
+        </View>
       </VStack>
+      
+      {/* Developer Tools Section - Only show in dev mode */}
+      {__DEV__ && (
+        <VStack gap={2 as any}>
+          <Text size="sm" colorTheme="mutedForeground" weight="semibold" style={{ paddingLeft: 4 }}>
+            DEVELOPER TOOLS
+          </Text>
+          <View style={{
+            backgroundColor: theme.card,
+            borderRadius: 8,
+            padding: spacing[4] as any,
+            borderWidth: 1,
+            borderColor: theme.border,
+          }}>
+            <VStack gap={4 as any}>
+              {/* Debug Console Toggle */}
+              <HStack justifyContent="space-between" alignItems="center">
+                <VStack gap={1 as any} style={{ flex: 1 }}>
+                  <Text weight="semibold">Debug Console</Text>
+                  <Text size="sm" colorTheme="mutedForeground">
+                    Show floating debug console button
+                  </Text>
+                </VStack>
+                <Switch
+                  value={showDebugPanel}
+                  onValueChange={() => {
+                    haptic('light');
+                    toggleDebugPanel();
+                  }}
+                />
+              </HStack>
+              
+              {/* Navigation Debugger Toggle */}
+              <HStack justifyContent="space-between" alignItems="center">
+                <VStack gap={1 as any} style={{ flex: 1 }}>
+                  <Text weight="semibold">Navigation Debugger</Text>
+                  <Text size="sm" colorTheme="mutedForeground">
+                    Show expo-router navigation debugger
+                  </Text>
+                </VStack>
+                <Switch
+                  value={showNavigationDebugger}
+                  onValueChange={() => {
+                    haptic('light');
+                    toggleNavigationDebugger();
+                  }}
+                />
+              </HStack>
+            </VStack>
+          </View>
+        </VStack>
+      )}
       
       {/* Notifications Section */}
       <VStack gap={2 as any}>
@@ -436,19 +489,41 @@ export default function SettingsScreen() {
   
   if (Platform.OS !== 'web') {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-        <ScrollView
-          contentContainerStyle={{ padding: spacing[4] as any, paddingBottom: spacing[6] as any }}
-          showsVerticalScrollIndicator={false}
-        >
-          {content}
-        </ScrollView>
-      </SafeAreaView>
+      <View style={{ flex: 1, backgroundColor: theme.background }}>
+        <UnifiedHeader 
+            title="Settings"
+            subtitle="Manage your preferences"
+            rightElement={
+              <Avatar
+                source={user?.image ? { uri: user.image } : undefined}
+                name={user?.name || 'User'}
+                size="xl"
+              />
+            }
+          />
+          <ScrollView
+            contentContainerStyle={{ padding: spacing[4] as any, paddingBottom: spacing[6] as any }}
+            showsVerticalScrollIndicator={false}
+          >
+            {content}
+          </ScrollView>
+      </View>
     );
   }
   
   return (
     <Container>
+      <UnifiedHeader 
+        title="Settings"
+        subtitle="Manage your preferences"
+        rightElement={
+          <Avatar
+            source={user?.image ? { uri: user.image } : undefined}
+            name={user?.name || 'User'}
+            size="xl"
+          />
+        }
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 20 }}

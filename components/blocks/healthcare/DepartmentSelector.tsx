@@ -8,6 +8,8 @@ import {
   TouchableWithoutFeedback,
   Platform,
   FlatList,
+  KeyboardAvoidingView,
+  Dimensions,
 } from 'react-native';
 import {
   VStack,
@@ -17,11 +19,13 @@ import {
   Badge,
   Button,
   Symbol,
+  Container,
 } from '@/components/universal';
 import { useTheme } from '@/lib/theme/provider';
 import { useSpacing } from '@/lib/stores/spacing-store';
 import { haptic } from '@/lib/ui/haptics';
 import { useShadow } from '@/hooks/useShadow';
+import { useResponsive } from '@/hooks/responsive';
 import Animated, { 
   FadeIn, 
   FadeOut,
@@ -90,6 +94,7 @@ export function DepartmentSelector({
   const theme = useTheme();
   const { spacing } = useSpacing();
   const shadowMd = useShadow({ size: 'md' });
+  const { isMobile } = useResponsive();
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -233,26 +238,16 @@ export function DepartmentSelector({
       <Modal
         visible={showModal}
         animationType="slide"
-        transparent={true}
+        transparent={false}
+        presentationStyle={isMobile ? "fullScreen" : "pageSheet"}
         onRequestClose={() => setShowModal(false)}
       >
-        <TouchableWithoutFeedback onPress={() => setShowModal(false)}>
-          <View style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: 'flex-end',
-          }}>
-            <TouchableWithoutFeedback>
-              <Animated.View
-                entering={FadeIn}
-                style={{
-                  backgroundColor: theme.background,
-                  borderTopLeftRadius: 24,
-                  borderTopRightRadius: 24,
-                  maxHeight: '80%',
-                  ...shadowMd,
-                }}
-              >
+        <Container safe scroll={false} style={{ flex: 1, backgroundColor: theme.background }}>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+            <View style={{ flex: 1 }}>
                 {/* Modal Header */}
                 <HStack
                   p={4}
@@ -261,6 +256,7 @@ export function DepartmentSelector({
                   style={{
                     borderBottomWidth: 1,
                     borderBottomColor: theme.border,
+                    backgroundColor: theme.background,
                   }}
                 >
                   <Text size="xl" weight="bold">Select Department</Text>
@@ -371,10 +367,9 @@ export function DepartmentSelector({
                     </>
                   )}
                 </ScrollView>
-              </Animated.View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
+            </View>
+          </KeyboardAvoidingView>
+        </Container>
       </Modal>
     </>
   );

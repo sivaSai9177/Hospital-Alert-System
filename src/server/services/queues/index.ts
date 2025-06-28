@@ -4,7 +4,7 @@
  */
 
 import { hybridQueue, queues } from './hybrid-queue';
-import { log } from '@/lib/core/debug/unified-logger';
+import { log } from '@/lib/core/debug/server-logger';
 
 // Initialize queue system on module load
 let initialized = false;

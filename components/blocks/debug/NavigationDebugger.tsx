@@ -15,12 +15,14 @@ import { useSpacing } from '@/lib/stores/spacing-store';
 import { navigationLogger, getNavigationHistory } from '@/lib/navigation/navigation-logger';
 import { isValidRoute, VALID_ROUTES } from '@/lib/navigation/route-validator';
 import { haptic } from '@/lib/ui/haptics';
+import { useDebugStore } from '@/lib/stores/debug-store';
 
 export function NavigationDebugger() {
   const pathname = usePathname();
   const router = useRouter();
   const theme = useTheme();
   const { spacing } = useSpacing();
+  const { showNavigationDebugger } = useDebugStore();
   const [history, setHistory] = useState(getNavigationHistory());
   const [showAllRoutes, setShowAllRoutes] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -53,7 +55,7 @@ export function NavigationDebugger() {
     setHistory([]);
   };
   
-  if (!__DEV__) return null;
+  if (!__DEV__ || !showNavigationDebugger) return null;
   
   return (
     <View

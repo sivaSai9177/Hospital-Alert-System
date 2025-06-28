@@ -3,7 +3,7 @@
  * Centralized logging service that integrates with PostHog for analytics
  */
 
-import { log } from '@/lib/core/debug/unified-logger';
+import { log } from '@/lib/core/debug/server-logger';
 
 // Dynamic import PostHog to make it optional
 let PostHog: any;

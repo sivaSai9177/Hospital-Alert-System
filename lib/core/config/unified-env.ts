@@ -3,8 +3,24 @@
  * Handles all environment scenarios: local, network, tunnel, OAuth
  */
 
-import { Platform } from 'react-native';
-import Constants from 'expo-constants';
+// Platform detection that works on both client and server
+const getPlatform = () => {
+  // Server-side check
+  if (typeof window === 'undefined') {
+    return { OS: 'server' };
+  }
+  
+  // Client-side - try to use React Native Platform if available
+  try {
+    const { Platform } = require('react-native');
+    return Platform;
+  } catch (e) {
+    // Fallback for web or when React Native is not available
+    return { OS: 'web' };
+  }
+};
+
+const Platform = getPlatform();
 
 export type EnvironmentMode = 'local' | 'network' | 'tunnel' | 'production';
 
@@ -65,7 +81,7 @@ function getCommonServiceConfig() {
     redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
     logging: {
       enabled: process.env.LOGGING_SERVICE_ENABLED === 'true',
-      serviceUrl: process.env.LOGGING_SERVICE_URL || 'http://logging-local:3003',
+      serviceUrl: process.env.EXPO_PUBLIC_LOGGING_SERVICE_URL || process.env.LOGGING_SERVICE_URL || 'http://logging-local:3003',
       batchSize: parseInt(process.env.LOGGING_BATCH_SIZE || '50', 10),
       flushInterval: parseInt(process.env.LOGGING_FLUSH_INTERVAL || '5000', 10),
     },
@@ -212,40 +228,42 @@ function getNetworkUrl(): string {
     return window.location.origin;
   }
   
-  // Try to get auto-detected IP first
-  // Note: This is synchronous fallback, actual detection happens asynchronously
-  const possibleIPs = [
-    '192.168.2.1',   // Secondary (current active)
-    '192.168.1.104', // Current network
-    '192.168.0.106', // Previous network
-    '192.168.3.1',   // Tertiary
-  ];
-  
-  // Check environment variable but validate it
+  // First priority: Use environment variable if set
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (envUrl && !envUrl.includes('localhost')) {
-    // Extract IP from URL
-    const match = envUrl.match(/(\d+\.\d+\.\d+\.\d+)/);
-    if (match) {
-      const envIP = match[1];
-      // Use env URL if it's in our known IPs
-      if (possibleIPs.includes(envIP)) {
-        return envUrl;
-      }
+  // Only log once on client side to avoid spam
+  if (Platform.OS !== 'server' && typeof window !== 'undefined' && !(window as any).__envLogged) {
+    console.log('[ENV] Checking EXPO_PUBLIC_API_URL:', {
+      value: envUrl,
+      allEnvVars: Object.keys(process.env).filter(k => k.includes('API')),
+      localIP: process.env.LOCAL_IP,
+      nodeEnv: process.env.NODE_ENV,
+      platform: Platform.OS
+    });
+    (window as any).__envLogged = true;
+  }
+  if (envUrl && envUrl !== '') {
+    if (Platform.OS !== 'server' && typeof window !== 'undefined' && !(window as any).__envUrlLogged) {
+      console.log('[ENV] Using EXPO_PUBLIC_API_URL:', envUrl);
+      (window as any).__envUrlLogged = true;
     }
+    return envUrl;
   }
   
-  // Android emulator
+  // Android emulator special case
   if (Platform.OS === 'android' && __DEV__) {
+    console.log('[ENV] Android emulator detected, using 10.0.2.2');
     return 'http://10.0.2.2:8081';
   }
   
-  // iOS - try current network IP first
-  if (Platform.OS === 'ios') {
-    return `http://192.168.2.1:8081`; // Current detected IP
+  // For iOS and physical devices, try to use the LOCAL_IP if available
+  const localIP = process.env.LOCAL_IP || process.env.REACT_NATIVE_PACKAGER_HOSTNAME;
+  if (localIP) {
+    console.log('[ENV] Using LOCAL_IP:', localIP);
+    return `http://${localIP}:8081`;
   }
   
-  // Default fallback
+  // Default fallback - this should rarely be used
+  console.warn('[ENV] No network configuration found, falling back to localhost');
   return 'http://localhost:8081';
 }
 

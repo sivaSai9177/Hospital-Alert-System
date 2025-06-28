@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Get the script directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -93,32 +96,77 @@ APP_ENV=local \
 bunx drizzle-kit push
 
 # Get local IP for mobile access
-LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}' | head -n 1)
+# First check if user provided a manual IP
+if [[ ! -z "$EXPO_LOCAL_IP" ]]; then
+    LOCAL_IP=$EXPO_LOCAL_IP
+    echo -e "${YELLOW}📍 Using manual IP address: $LOCAL_IP${NC}"
+else
+    # Use our network detection utility (capture only the IP)
+    LOCAL_IP=$("$SCRIPT_DIR/utils/detect-network.sh" --export 2>/dev/null)
+    
+    # Clean up any whitespace
+    LOCAL_IP=$(echo "$LOCAL_IP" | tr -d '\n' | tr -d ' ')
+    
+    # Fallback to old method if detection fails
+    if [[ -z "$LOCAL_IP" ]] || [[ "$LOCAL_IP" == *"Network"* ]]; then
+        LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}' | head -n 1)
+    fi
+fi
+
+# Validate IP
+if [[ -z "$LOCAL_IP" ]]; then
+    echo -e "${RED}❌ Could not detect local IP address!${NC}"
+    echo -e "${YELLOW}💡 You can manually set it with: export EXPO_LOCAL_IP=your.ip.address${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}📱 Using IP address: $LOCAL_IP${NC}"
 
 # Export environment variables for Expo
 export DATABASE_URL="postgresql://myexpo:myexpo123@localhost:5432/myexpo_dev"
 export REDIS_URL="redis://localhost:6379"
 export EXPO_PUBLIC_API_URL="http://${LOCAL_IP}:8081"
 export EXPO_PUBLIC_WS_URL="ws://${LOCAL_IP}:3002/api/trpc"
-export BETTER_AUTH_URL="http://localhost:8081"
+export BETTER_AUTH_URL="http://${LOCAL_IP}:8081"
+export BETTER_AUTH_BASE_URL="http://${LOCAL_IP}:8081"
 # Don't override BETTER_AUTH_SECRET - use the one from .env
 export APP_ENV="local"
 export NODE_ENV="development"
 export EXPO_DEVTOOLS_LISTEN_ADDRESS="0.0.0.0"
 export REACT_NATIVE_PACKAGER_HOSTNAME="${LOCAL_IP}"
+export LOCAL_IP="${LOCAL_IP}"
 
-# Logging service configuration (read from .env if set)
+# Logging service configuration
 export LOGGING_SERVICE_URL="http://localhost:3003"
-export EXPO_PUBLIC_LOGGING_SERVICE_URL="http://localhost:3003"
+export EXPO_PUBLIC_LOGGING_SERVICE_URL="http://${LOCAL_IP}:3003"
+
+# Debug: Show the actual API URL being used
+echo -e "${YELLOW}🔧 API Configuration:${NC}"
+echo -e "   EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL}"
+echo -e "   EXPO_PUBLIC_WS_URL: ${EXPO_PUBLIC_WS_URL}"
 
 echo -e "\n${GREEN}✅ All services are running!${NC}"
+
+# Run network detection to show all interfaces
+echo -e "\n${BLUE}🌐 Network Configuration:${NC}"
+"$SCRIPT_DIR/utils/detect-network.sh" 2>/dev/null | grep -E "(Active Network|en[0-9]|WiFi|Primary IP)" | head -n 6
+
 echo -e "\n${BLUE}📱 Access Points:${NC}"
-echo -e "   Expo Dev Server: http://localhost:8081"
-echo -e "   Mobile (LAN): http://${LOCAL_IP}:8081"
-echo -e "   Web Browser: http://localhost:8081"
-echo -e "   Database: postgresql://localhost:5432/myexpo_dev"
-echo -e "   WebSocket: ws://localhost:3002/api/trpc"
-echo -e "   Logging Service: http://localhost:3003"
+echo -e "┌─────────────────────────────────────────────────┐"
+echo -e "│ ${GREEN}Local Development:${NC}                              │"
+echo -e "│   Web Browser: http://localhost:8081            │"
+echo -e "│   Metro Bundler: http://localhost:8081          │"
+echo -e "│                                                 │"
+echo -e "│ ${GREEN}Mobile Device (Same WiFi):${NC}                     │"
+echo -e "│   Expo Go App: http://${LOCAL_IP}:8081        │"
+echo -e "│   API Server: http://${LOCAL_IP}:8081         │"
+echo -e "│   WebSocket: ws://${LOCAL_IP}:3002            │"
+echo -e "│                                                 │"
+echo -e "│ ${GREEN}Backend Services:${NC}                              │"
+echo -e "│   Database: postgresql://localhost:5432         │"
+echo -e "│   Redis: redis://localhost:6379                 │"
+echo -e "│   Logging: http://localhost:3003                │"
+echo -e "└─────────────────────────────────────────────────┘"
 
 echo -e "\n${BLUE}📱 Expo Go Commands:${NC}"
 echo -e "┌─────────────────────────────────────────┐"
@@ -149,7 +197,12 @@ rm -rf node_modules/.cache
 
 # Start Expo natively with increased memory limit
 echo -e "${YELLOW}🎯 Starting Expo with increased memory limit...${NC}\n"
-NODE_OPTIONS="--max-old-space-size=8192" EXPO_GO=1 expo start --lan --go --clear
+echo -e "${BLUE}📱 Scan the QR code with Expo Go app on your phone${NC}\n"
+
+# Use --lan option and set the hostname environment variable
+# Make sure we're in the right directory
+cd "$(dirname "$0")/.."
+REACT_NATIVE_PACKAGER_HOSTNAME="$LOCAL_IP" NODE_OPTIONS="--max-old-space-size=8192" EXPO_GO=1 expo start --lan --go --clear
 
 # Cleanup will be called when Expo exits
 cleanup

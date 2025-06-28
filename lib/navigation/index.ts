@@ -20,4 +20,13 @@ export * from './navigation-helper';
 export * from './animated-navigation';
 export * from './gesture-handler';
 export * from './transitions';
-export * from './page-transitions';
+// Re-export specific items from page-transitions
+export { 
+  pageTransitions,
+  getDefaultPageTransition,
+  applyPageTransition,
+  type TransitionType,
+  AnimatedPageWrapper,
+  pageEnteringAnimations,
+  pageExitingAnimations
+} from './page-transitions';

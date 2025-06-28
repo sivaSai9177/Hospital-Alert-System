@@ -41,7 +41,7 @@ import {
 } from '@/components/universal';
 import { useTheme } from '@/lib/theme/provider';
 import { useSpacing } from '@/lib/stores/spacing-store';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/stores/auth-store';
 import { api } from '@/lib/api/trpc';
 import { format } from 'date-fns';
 import { cn } from '@/lib/core/utils';

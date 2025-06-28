@@ -1,7 +1,8 @@
 export { Box } from './Box';
 export { Container } from './Container';
 export { Divider } from './Divider';
-export { Grid } from './Grid';
+export { Grid, GridItem } from './Grid';
+export { ResponsiveGrid, ResponsiveGridItem } from './ResponsiveGrid';
 export { ScrollArea } from './ScrollArea';
 export { ScrollContainer } from './ScrollContainer';
 export { ScrollHeader } from './ScrollHeader';

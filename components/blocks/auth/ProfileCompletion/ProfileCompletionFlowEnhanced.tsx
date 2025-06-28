@@ -354,6 +354,14 @@ export function ProfileCompletionFlowEnhanced({ onComplete, showSkip = false }: 
   };
 
   const handleSubmit = useCallback(async () => {
+    // Debug log button click
+    logger.info('Complete Profile button clicked', 'PROFILE_COMPLETION', {
+      isSubmitting: isSubmittingRef.current,
+      hasCompleted: hasCompletedRef.current,
+      formData: formData,
+      currentStep: currentStep
+    });
+    
     // Prevent duplicate submissions
     if (isSubmittingRef.current || hasCompletedRef.current) {
       logger.warn('Profile completion already in progress or completed', 'PROFILE_COMPLETION');
@@ -848,6 +856,19 @@ export function ProfileCompletionFlowEnhanced({ onComplete, showSkip = false }: 
         );
 
       case 3:
+        // Log form data when reaching final step
+        React.useEffect(() => {
+          logger.info('Reached final step with form data', 'PROFILE_COMPLETION', {
+            formData: formData,
+            errors: errors,
+            role: formData.role,
+            hasName: !!formData.name,
+            hasDepartment: !!formData.department,
+            acceptTerms: formData.acceptTerms,
+            acceptPrivacy: formData.acceptPrivacy
+          });
+        }, []);
+        
         return (
           <View className="space-y-4">
             {/* Final step information */}
@@ -973,6 +994,18 @@ export function ProfileCompletionFlowEnhanced({ onComplete, showSkip = false }: 
             
             <CardContent className="space-y-4">
               {renderStep()}
+              
+              {/* Debug: Show any validation errors */}
+              {__DEV__ && Object.keys(errors).length > 0 && (
+                <Alert variant="destructive">
+                  <Text size="sm" weight="semibold">Validation Errors:</Text>
+                  {Object.entries(errors).map(([field, error]) => (
+                    <Text key={field} size="xs" color="destructive">
+                      {field}: {error}
+                    </Text>
+                  ))}
+                </Alert>
+              )}
 
               <View className="space-y-3 pt-6">
                 <View className="flex-row space-x-3">
@@ -996,14 +1029,31 @@ export function ProfileCompletionFlowEnhanced({ onComplete, showSkip = false }: 
                         Next
                       </PrimaryButton>
                     ) : (
-                      <PrimaryButton
-                        onPress={handleSubmit}
-                        disabled={completeProfileMutation.isPending || isSubmittingRef.current || hasCompletedRef.current}
-                        isLoading={completeProfileMutation.isPending || isSubmittingRef.current}
-                        variant="default"
-                      >
-                        Complete Profile
-                      </PrimaryButton>
+                      <>
+                        {/* Debug info */}
+                        {__DEV__ && (
+                          <Text size="xs" color="muted" style={{ marginBottom: 8 }}>
+                            Debug: isPending={String(completeProfileMutation.isPending)}, 
+                            isSubmitting={String(isSubmittingRef.current)}, 
+                            hasCompleted={String(hasCompletedRef.current)}
+                          </Text>
+                        )}
+                        <PrimaryButton
+                          onPress={() => {
+                            logger.info('Button onPress triggered', 'PROFILE_COMPLETION', {
+                              isPending: completeProfileMutation.isPending,
+                              isSubmitting: isSubmittingRef.current,
+                              hasCompleted: hasCompletedRef.current
+                            });
+                            handleSubmit();
+                          }}
+                          disabled={completeProfileMutation.isPending || isSubmittingRef.current || hasCompletedRef.current}
+                          isLoading={completeProfileMutation.isPending || isSubmittingRef.current}
+                          variant="default"
+                        >
+                          Complete Profile
+                        </PrimaryButton>
+                      </>
                     )}
                   </View>
                 </View>
