@@ -1,0 +1,317 @@
+/* Color Extractor Component Styles */
+.color-extractor {
+  padding: var(--size-medium);
+}
+
+.section-header {
+  margin-bottom: var(--size-large);
+}
+
+.section-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--figma-color-text);
+  margin-bottom: var(--size-xsmall);
+}
+
+.section-description {
+  font-size: var(--font-size-small);
+  color: var(--figma-color-text-secondary);
+}
+
+.color-extractor-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-medium);
+}
+
+/* Color Section */
+.color-section {
+  padding-top: var(--size-medium);
+  border-top: 1px solid var(--figma-color-border);
+}
+
+.color-section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: var(--size-medium);
+  color: var(--figma-color-text);
+}
+
+/* Extracted Colors List */
+.extracted-colors-list {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-small);
+  padding-right: var(--size-xsmall);
+}
+
+.color-swatch-item {
+  display: flex;
+  align-items: center;
+  gap: var(--size-medium);
+  padding: var(--size-small);
+  border: 1px solid var(--figma-color-border);
+  border-radius: var(--border-radius-small);
+  transition: all 0.2s;
+}
+
+.color-swatch-item:hover {
+  box-shadow: var(--shadow-small);
+  border-color: var(--figma-color-border-brand);
+}
+
+.color-swatch {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--border-radius-small);
+  border: 1px solid var(--figma-color-border);
+  flex-shrink: 0;
+}
+
+.color-swatch-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.color-hex {
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  font-family: var(--font-stack-monospace);
+  color: var(--figma-color-text);
+  margin-bottom: 2px;
+}
+
+.color-usage {
+  font-size: 11px;
+  color: var(--figma-color-text-secondary);
+  margin-bottom: 2px;
+}
+
+.color-hsl {
+  font-size: 11px;
+  color: var(--figma-color-text-tertiary);
+  font-family: var(--font-stack-monospace);
+}
+
+.color-count-info {
+  font-size: var(--font-size-small);
+  color: var(--figma-color-text-secondary);
+  text-align: center;
+  margin-top: var(--size-small);
+  font-style: italic;
+}
+
+/* Color Categories */
+.color-categories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-medium);
+}
+
+.category-card {
+  padding: var(--size-medium);
+  border: 1px solid var(--figma-color-border);
+  border-radius: var(--border-radius-small);
+  background: var(--figma-color-bg-secondary);
+}
+
+.category-title {
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  margin-bottom: var(--size-xsmall);
+  color: var(--figma-color-text);
+}
+
+.category-role {
+  font-weight: 400;
+  color: var(--figma-color-text-secondary);
+}
+
+.category-suggestion {
+  font-size: 12px;
+  color: var(--figma-color-text-secondary);
+  margin-bottom: var(--size-small);
+  line-height: 1.4;
+}
+
+.category-colors {
+  display: flex;
+  gap: var(--size-xsmall);
+  flex-wrap: wrap;
+}
+
+.category-color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-small);
+  border: 1px solid var(--figma-color-border);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.category-color-swatch:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-small);
+}
+
+/* Theme Preview */
+.theme-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-medium);
+}
+
+.theme-mode-toggle {
+  display: flex;
+  gap: var(--size-xsmall);
+}
+
+.theme-mode-button {
+  flex: 1;
+  padding: var(--size-xsmall) var(--size-small);
+  background: var(--figma-color-bg-secondary);
+  border: 1px solid var(--figma-color-border);
+  border-radius: var(--border-radius-small);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theme-mode-button:hover {
+  background: var(--figma-color-bg-hover);
+}
+
+.theme-mode-button.active {
+  background: var(--figma-color-bg-brand);
+  color: var(--figma-color-text-onbrand);
+  border-color: var(--figma-color-bg-brand);
+}
+
+.theme-preview {
+  padding: var(--size-large);
+  border-radius: var(--border-radius-medium);
+  border: 1px solid var(--figma-color-border);
+  transition: all 0.3s;
+}
+
+.theme-preview.light {
+  background: #ffffff;
+}
+
+.theme-preview.dark {
+  background: #1a1a1a;
+}
+
+.theme-colors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--size-small);
+}
+
+.theme-color-item {
+  display: flex;
+  align-items: center;
+  gap: var(--size-small);
+}
+
+.theme-color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.theme-preview.dark .theme-color-swatch {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.theme-color-name {
+  font-size: 12px;
+  color: var(--figma-color-text);
+  text-transform: capitalize;
+}
+
+.theme-preview.dark .theme-color-name {
+  color: #e5e5e5;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: var(--size-small);
+  padding-top: var(--size-medium);
+}
+
+.action-buttons .button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--size-xsmall);
+}
+
+.button-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Custom Button Styles */
+.button-primary {
+  background: var(--figma-color-bg-brand);
+  color: var(--figma-color-text-onbrand);
+}
+
+.button-primary:hover:not(:disabled) {
+  background: var(--figma-color-bg-brand-hover);
+}
+
+.button-success {
+  background: var(--figma-color-bg-success);
+  color: var(--figma-color-text-onsuccess);
+}
+
+.button-success:hover:not(:disabled) {
+  background: var(--figma-color-bg-success-hover);
+}
+
+.button-secondary {
+  background: var(--figma-color-bg-secondary);
+  color: var(--figma-color-text);
+}
+
+.button-secondary:hover:not(:disabled) {
+  background: var(--figma-color-bg-tertiary);
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Loading State */
+.color-extractor .button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Scrollbar styling for color list */
+.extracted-colors-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.extracted-colors-list::-webkit-scrollbar-track {
+  background: var(--figma-color-bg-secondary);
+  border-radius: 3px;
+}
+
+.extracted-colors-list::-webkit-scrollbar-thumb {
+  background: var(--figma-color-border);
+  border-radius: 3px;
+}
+
+.extracted-colors-list::-webkit-scrollbar-thumb:hover {
+  background: var(--figma-color-border-brand);
+}

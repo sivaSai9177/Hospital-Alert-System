@@ -1,0 +1,234 @@
+export enum MessageType {
+  // UI to Plugin
+  EXTRACT_TOKENS = 'EXTRACT_TOKENS',
+  SYNC_TO_CODE = 'SYNC_TO_CODE',
+  SYNC_FROM_CODE = 'SYNC_FROM_CODE',
+  GENERATE_COMPONENT = 'GENERATE_COMPONENT',
+  UPDATE_SETTINGS = 'UPDATE_SETTINGS',
+  ENABLE_REALTIME_SYNC = 'ENABLE_REALTIME_SYNC',
+  DISABLE_REALTIME_SYNC = 'DISABLE_REALTIME_SYNC',
+  CREATE_PAGE = 'CREATE_PAGE',
+  NAVIGATE_TO_PAGE = 'NAVIGATE_TO_PAGE',
+  IMPORT_COMPONENTS = 'IMPORT_COMPONENTS',
+  ORGANIZE_DESIGN_SYSTEM = 'ORGANIZE_DESIGN_SYSTEM',
+  GET_PAGES = 'GET_PAGES',
+  CLOSE = 'CLOSE',
+  
+  // New message types for enhanced functionality
+  IMPORT_TOKENS = 'IMPORT_TOKENS',
+  RETRY_FAILED_TOKENS = 'RETRY_FAILED_TOKENS',
+  VALIDATE_TOKENS = 'VALIDATE_TOKENS',
+  SHOW_VALIDATION_DETAILS = 'SHOW_VALIDATION_DETAILS',
+  GENERATE_DESIGN_SYSTEM_PAGES = 'GENERATE_DESIGN_SYSTEM_PAGES',
+  UPDATE_DESIGN_SYSTEM_PAGES = 'UPDATE_DESIGN_SYSTEM_PAGES',
+  INSPECT_FRAME = 'INSPECT_FRAME',
+  INSPECT_SELECTED = 'INSPECT_SELECTED',
+  GET_ALL_FRAMES = 'GET_ALL_FRAMES',
+  GET_FRAME_ISSUES = 'GET_FRAME_ISSUES',
+  GET_SELECTION_INFO = 'GET_SELECTION_INFO',
+  GET_ALL_PAGES = 'GET_ALL_PAGES',
+  GET_ELEMENT_DETAILS = 'GET_ELEMENT_DETAILS',
+  GET_SELECTION_GROUPS = 'GET_SELECTION_GROUPS',
+  EDIT_FRAME = 'EDIT_FRAME',
+  EDIT_SELECTED_FRAME = 'EDIT_SELECTED_FRAME',
+  CREATE_PRESET_FRAME = 'CREATE_PRESET_FRAME',
+  FIX_FRAME_ISSUES = 'FIX_FRAME_ISSUES',
+  GET_CURRENT_SELECTION = 'GET_CURRENT_SELECTION',
+  GET_SELECTION = 'GET_SELECTION',
+  UI_READY = 'UI_READY',
+  MUTATE_FRAME = 'MUTATE_FRAME',
+  BATCH_MUTATE_FRAMES = 'BATCH_MUTATE_FRAMES',
+  ANALYZE_COMPONENTS = 'ANALYZE_COMPONENTS',
+  EXTRACT_COLORS = 'EXTRACT_COLORS',
+  SYNC_EXTRACTED_COLORS = 'SYNC_EXTRACTED_COLORS',
+  APPLY_EXTRACTED_THEME = 'APPLY_EXTRACTED_THEME',
+  GENERATE_TYPOGRAPHY_SYSTEM = 'GENERATE_TYPOGRAPHY_SYSTEM',
+  GENERATE_SPACING_SYSTEM = 'GENERATE_SPACING_SYSTEM',
+  GENERATE_COMPONENT_LIBRARY = 'GENERATE_COMPONENT_LIBRARY',
+  EXPORT_DESIGN_DOCUMENTATION = 'EXPORT_DESIGN_DOCUMENTATION',
+  
+  // Operation control
+  PAUSE_OPERATION = 'PAUSE_OPERATION',
+  RESUME_OPERATION = 'RESUME_OPERATION',
+  CANCEL_OPERATION = 'CANCEL_OPERATION',
+  GET_OPERATION_STATUS = 'GET_OPERATION_STATUS',
+  
+  // Agent messages
+  AGENT_MESSAGE = 'AGENT_MESSAGE',
+  AGENT_ACTION = 'AGENT_ACTION',
+  GENERATE_CODE = 'GENERATE_CODE',
+  
+  // Plugin to UI
+  INIT = 'INIT',
+  LOADING = 'LOADING',
+  ERROR = 'ERROR',
+  TOKENS_EXTRACTED = 'TOKENS_EXTRACTED',
+  SYNC_COMPLETE = 'SYNC_COMPLETE',
+  COMPONENT_GENERATED = 'COMPONENT_GENERATED',
+  SETTINGS_UPDATED = 'SETTINGS_UPDATED',
+  REALTIME_STATUS = 'REALTIME_STATUS',
+  REALTIME_UPDATE = 'REALTIME_UPDATE',
+  PAGE_CREATED = 'PAGE_CREATED',
+  PAGE_NAVIGATED = 'PAGE_NAVIGATED',
+  COMPONENTS_IMPORTED = 'COMPONENTS_IMPORTED',
+  DESIGN_SYSTEM_ORGANIZED = 'DESIGN_SYSTEM_ORGANIZED',
+  PAGES_LIST = 'PAGES_LIST',
+  
+  // Response message types
+  CODE_GENERATED = 'CODE_GENERATED',
+  VALIDATION_RESULTS = 'VALIDATION_RESULTS',
+  SHOW_VALIDATION_DETAILS_RESULT = 'SHOW_VALIDATION_DETAILS_RESULT',
+  PAGES_GENERATED = 'PAGES_GENERATED',
+  COMPONENT_LIBRARY_GENERATED = 'COMPONENT_LIBRARY_GENERATED',
+  DOCUMENTATION_EXPORTED = 'DOCUMENTATION_EXPORTED',
+  PAGES_UPDATED = 'PAGES_UPDATED',
+  FRAME_INSPECTION_RESULT = 'FRAME_INSPECTION_RESULT',
+  SELECTION_INFO = 'SELECTION_INFO',
+  ALL_PAGES_RESULT = 'ALL_PAGES_RESULT',
+  ELEMENT_DETAILS_RESULT = 'ELEMENT_DETAILS_RESULT',
+  SELECTION_GROUPS_RESULT = 'SELECTION_GROUPS_RESULT',
+  ALL_FRAMES_RESULT = 'ALL_FRAMES_RESULT',
+  FRAME_ISSUES_RESULT = 'FRAME_ISSUES_RESULT',
+  FRAME_EDIT_RESULT = 'FRAME_EDIT_RESULT',
+  FRAME_CREATE_RESULT = 'FRAME_CREATE_RESULT',
+  FRAME_FIX_RESULT = 'FRAME_FIX_RESULT',
+  SELECTION_CHANGED = 'SELECTION_CHANGED',
+  CONNECTED = 'CONNECTED',
+  MUTATE_FRAME_RESULT = 'MUTATE_FRAME_RESULT',
+  BATCH_MUTATE_FRAMES_RESULT = 'BATCH_MUTATE_FRAMES_RESULT',
+  COMPONENT_ANALYSIS_RESULT = 'COMPONENT_ANALYSIS_RESULT',
+  COLOR_EXTRACTION_RESULT = 'COLOR_EXTRACTION_RESULT',
+  COLOR_SYNC_RESULT = 'COLOR_SYNC_RESULT',
+  THEME_APPLIED_RESULT = 'THEME_APPLIED_RESULT',
+  
+  // Operation status messages
+  OPERATION_STARTED = 'OPERATION_STARTED',
+  OPERATION_PROGRESS = 'OPERATION_PROGRESS',
+  OPERATION_PAUSED = 'OPERATION_PAUSED',
+  OPERATION_RESUMED = 'OPERATION_RESUMED',
+  OPERATION_COMPLETED = 'OPERATION_COMPLETED',
+  OPERATION_FAILED = 'OPERATION_FAILED',
+  OPERATION_CANCELLED = 'OPERATION_CANCELLED',
+  OPERATION_STATUS = 'OPERATION_STATUS',
+  
+  
+  // Agent response messages
+  AGENT_RESPONSE = 'AGENT_RESPONSE',
+  AGENT_STREAM_START = 'AGENT_STREAM_START',
+  AGENT_STREAM_CHUNK = 'AGENT_STREAM_CHUNK',
+  AGENT_STREAM_END = 'AGENT_STREAM_END',
+  AGENT_ERROR = 'AGENT_ERROR',
+  
+  // WebSocket messages
+  WEBSOCKET_CONNECTED = 'WEBSOCKET_CONNECTED',
+  WEBSOCKET_DISCONNECTED = 'WEBSOCKET_DISCONNECTED',
+  WEBSOCKET_ERROR = 'WEBSOCKET_ERROR',
+  WEBSOCKET_MESSAGE = 'WEBSOCKET_MESSAGE',
+  WEBSOCKET_CONFLICT = 'WEBSOCKET_CONFLICT',
+  WEBSOCKET_UPDATE = 'WEBSOCKET_UPDATE',
+  WEBSOCKET_SYNC_REQUEST = 'WEBSOCKET_SYNC_REQUEST',
+  
+  // Navigation messages
+  NAVIGATE_TO_TAB = 'NAVIGATE_TO_TAB',
+  
+  // Search messages
+  SMART_SEARCH = 'SMART_SEARCH',
+  SEARCH_RESULTS = 'SEARCH_RESULTS',
+  OPEN_SEARCH_RESULT = 'OPEN_SEARCH_RESULT'
+}
+
+export interface PluginMessage {
+  type: MessageType;
+  data?: any;
+}
+
+export interface ExtractTokensMessage extends PluginMessage {
+  type: MessageType.EXTRACT_TOKENS;
+}
+
+export interface SyncToCodeMessage extends PluginMessage {
+  type: MessageType.SYNC_TO_CODE;
+  data: {
+    tokens: any;
+    config: SyncConfig;
+  };
+}
+
+export interface SyncFromCodeMessage extends PluginMessage {
+  type: MessageType.SYNC_FROM_CODE;
+}
+
+export interface GenerateComponentMessage extends PluginMessage {
+  type: MessageType.GENERATE_COMPONENT;
+  data: {
+    options: ComponentGenerationOptions;
+  };
+}
+
+export interface SyncConfig {
+  direction: 'figma-to-code' | 'code-to-figma' | 'bidirectional';
+  autoSync: boolean;
+  conflictResolution: 'manual' | 'prefer-figma' | 'prefer-code';
+  mcpServerUrl?: string;
+  wsServerUrl?: string;
+  syncMode?: 'http' | 'websocket';
+  enableRealtimeSync?: boolean;
+}
+
+export interface ComponentGenerationOptions {
+  platform: 'react-native' | 'web' | 'universal';
+  includeTypes: boolean;
+  includeProps: boolean;
+  includeAnimations: boolean;
+  useNativeWind: boolean;
+}
+
+export interface CreatePageMessage extends PluginMessage {
+  type: MessageType.CREATE_PAGE;
+  data: {
+    name: string;
+    setAsCurrent?: boolean;
+  };
+}
+
+export interface NavigateToPageMessage extends PluginMessage {
+  type: MessageType.NAVIGATE_TO_PAGE;
+  data: {
+    pageId?: string;
+    pageName?: string;
+  };
+}
+
+export interface ImportComponentsMessage extends PluginMessage {
+  type: MessageType.IMPORT_COMPONENTS;
+  data: {
+    components: ComponentDefinition[];
+    targetPage?: string;
+    organize?: boolean;
+  };
+}
+
+export interface ComponentDefinition {
+  name: string;
+  type: 'button' | 'input' | 'card' | 'badge' | 'avatar' | 'dialog' | 'custom';
+  variants?: Record<string, any>;
+  tokens?: any;
+  dimensions?: { width: number; height: number };
+  properties?: Record<string, any>;
+}
+
+export interface OrganizeDesignSystemMessage extends PluginMessage {
+  type: MessageType.ORGANIZE_DESIGN_SYSTEM;
+  data: {
+    categories?: string[];
+    createExamples?: boolean;
+    createDocumentation?: boolean;
+  };
+}
+
+export interface PageInfo {
+  id: string;
+  name: string;
+  isCurrent: boolean;
+  type?: 'design-system' | 'components' | 'examples' | 'regular';
+}

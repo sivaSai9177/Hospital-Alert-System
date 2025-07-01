@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "universal-design-system": {
+      "command": "bun",
+      "args": ["run", "/Users/sirigiri/Documents/coding-projects/my-expo/figma-plugin/mcp-server/src/server.ts"],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "description": "MCP server for syncing design tokens between Figma and Universal App codebase",
+      "alwaysAllow": [
+        "extract-tokens",
+        "sync-tokens-to-code",
+        "generate-component",
+        "analyze-component-patterns"
+      ]
+    }
+  }
+}
