@@ -24,6 +24,14 @@ cleanup() {
 # Trap Ctrl+C and cleanup
 trap cleanup INT TERM
 
+# Check for running services from main docker-compose
+if docker ps --format "{{.Names}}" | grep -E "^myexpo-postgres$" > /dev/null 2>&1; then
+    echo -e "${YELLOW}⚠️  Found myexpo-postgres running, may conflict with local services${NC}"
+fi
+if docker ps --format "{{.Names}}" | grep -E "^myexpo-redis$" > /dev/null 2>&1; then
+    echo -e "${YELLOW}⚠️  Found myexpo-redis running, may conflict with local services${NC}"
+fi
+
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
     echo -e "${RED}❌ Docker is not running! Please start Docker Desktop.${NC}"
@@ -39,14 +47,30 @@ docker rm myexpo-expo-local 2>/dev/null || true
 docker stop myexpo-websocket-local 2>/dev/null || true
 docker rm myexpo-websocket-local 2>/dev/null || true
 
-# Start only the required services (not Expo)
-echo -e "\n${YELLOW}🐳 Starting Docker services (without Expo)...${NC}"
-docker-compose -f docker-compose.local.yml up -d postgres-local redis-local logging-local
+# Check if services are already running from native:full
+POSTGRES_RUNNING=$(docker ps --format "{{.Names}}" | grep -E "^myexpo-postgres-local$" || true)
+REDIS_RUNNING=$(docker ps --format "{{.Names}}" | grep -E "^myexpo-redis-local$" || true)
 
-# Build and start the new WebSocket server
-echo -e "\n${YELLOW}🔌 Starting WebSocket server...${NC}"
-docker build -t my-expo-websocket-local -f docker/Dockerfile.websocket . > /dev/null 2>&1
-docker run -d --name myexpo-websocket-local -p 3002:3002 -e NODE_ENV=development -e EXPO_PUBLIC_WS_PORT=3002 my-expo-websocket-local > /dev/null 2>&1
+if [[ -z "$POSTGRES_RUNNING" ]] || [[ -z "$REDIS_RUNNING" ]]; then
+    # Start only the required services (not Expo)
+    echo -e "\n${YELLOW}🐳 Starting Docker services (without Expo)...${NC}"
+    docker-compose -f docker-compose.local.yml up -d postgres-local redis-local logging-local
+else
+    echo -e "\n${GREEN}✅ Database services already running${NC}"
+    # Ensure logging is running
+    docker-compose -f docker-compose.local.yml up -d logging-local
+fi
+
+# Check if WebSocket is already running from docker-compose
+WS_RUNNING=$(docker ps --format "{{.Names}}" | grep -E "^myexpo-websocket-local$" || true)
+
+if [[ -z "$WS_RUNNING" ]]; then
+    # Build and start the new WebSocket server
+    echo -e "\n${YELLOW}🔌 Starting WebSocket server...${NC}"
+    docker-compose -f docker-compose.local.yml up -d websocket-local
+else
+    echo -e "\n${GREEN}✅ WebSocket server already running${NC}"
+fi
 
 # Wait for services to be healthy
 echo -e "\n${YELLOW}⏳ Waiting for services to be ready...${NC}"

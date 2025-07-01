@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -21,6 +19,9 @@ services:
       retries: 5
     networks:
       - myexpo-network
+    profiles:
+      - default
+      - core
 
   # Redis for caching and queues
   redis:
@@ -37,6 +38,9 @@ services:
       retries: 5
     networks:
       - myexpo-network
+    profiles:
+      - default
+      - core
 
   # pgAdmin for database management
   pgadmin:
@@ -144,6 +148,56 @@ services:
       - tools
     command: ["tail", "-f", "/dev/null"]
 
+  # Figma Plugin Development
+  figma-plugin:
+    image: oven/bun:latest
+    container_name: myexpo-figma-plugin
+    working_dir: /app/figma-plugin
+    volumes:
+      - ./figma-plugin:/app/figma-plugin
+      - /app/figma-plugin/node_modules  # Prevent overwriting node_modules
+    ports:
+      - "${FIGMA_MCP_PORT:-3456}:3456"     # MCP server
+      - "${FIGMA_VITE_PORT:-3457}:3457"    # Vite dev server
+      - "${FIGMA_WS_PORT:-3458}:3458"      # WebSocket server
+    command: sh -c "bun install && bun run dev"
+    networks:
+      - myexpo-network
+    environment:
+      - NODE_ENV=development
+      - VITE_PORT=3457
+      - MCP_PORT=3456
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - qdrant
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3457"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - figma
+
+  # Qdrant Vector Database for Design Agent Memory
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: myexpo-qdrant
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"    # REST API
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+    networks:
+      - myexpo-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - figma
+
 networks:
   myexpo-network:
     driver: bridge
@@ -151,3 +205,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  qdrant_data:
