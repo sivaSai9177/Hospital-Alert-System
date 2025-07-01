@@ -61,10 +61,22 @@ export function EscalationTimeline({
   const theme = useTheme();
   const { spacing } = useSpacing();
   const screenWidth = Dimensions.get('window').width;
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   
   // Animation values
   const pulseAnimation = useSharedValue(1);
   const progressAnimation = useSharedValue(0);
+  
+  // Update countdown every minute
+  useEffect(() => {
+    if (alert.status === 'active' && nextEscalationAt) {
+      const interval = setInterval(() => {
+        forceUpdate(); // Force re-render to update countdown
+      }, 60000); // Update every minute
+      
+      return () => clearInterval(interval);
+    }
+  }, [alert.status, nextEscalationAt]);
   
   // Calculate timeline dimensions
   const padding = spacing[4] as number;

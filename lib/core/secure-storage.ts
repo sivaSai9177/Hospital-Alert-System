@@ -47,13 +47,15 @@ export const initializeSecureStorage = async () => {
   try {
     logger.debug('Initializing mobile storage', 'STORAGE');
     
-    // Initialize the persistent store
+    // Initialize the persistent store immediately
     if (!(global as any).__persistentStore) {
       (global as any).__persistentStore = {};
     }
     
-    // Load all better-auth related keys from SecureStore
-    // Note: Better Auth expo plugin uses underscore notation by default
+    // Mark as initialized immediately to unblock the app
+    storageInitialized = true;
+    
+    // Load auth data in the background (non-blocking)
     const keys = [
       'better-auth_cookie', 
       'better-auth_session_data',
@@ -65,23 +67,30 @@ export const initializeSecureStorage = async () => {
       'better-auth.session-token',
       'better-auth.user_data'
     ];
-    const loadPromises = keys.map(async (key) => {
-      try {
-        const value = await SecureStore.getItemAsync(key);
-        if (value) {
-          (global as any).__persistentStore[key] = value;
-          logger.debug(`Loaded ${key} from SecureStore`, 'STORAGE');
+    
+    // Load keys in background without blocking
+    Promise.all(
+      keys.map(async (key) => {
+        try {
+          const value = await SecureStore.getItemAsync(key);
+          if (value) {
+            (global as any).__persistentStore[key] = value;
+            logger.debug(`Loaded ${key} from SecureStore`, 'STORAGE');
+          }
+        } catch (error) {
+          logger.error(`Failed to load ${key} from SecureStore`, 'STORAGE', error);
         }
-      } catch (error) {
-        logger.error(`Failed to load ${key} from SecureStore`, 'STORAGE', error);
-      }
+      })
+    ).then(() => {
+      logger.debug('Mobile storage background loading complete', 'STORAGE');
+    }).catch(error => {
+      logger.error('Mobile storage background loading failed', 'STORAGE', error);
     });
     
-    await Promise.all(loadPromises);
-    storageInitialized = true;
-    logger.debug('Mobile storage initialization complete', 'STORAGE');
   } catch (error) {
     logger.error('Mobile storage initialization failed', 'STORAGE', error);
+    // Still mark as initialized to prevent blocking
+    storageInitialized = true;
   }
 };
 

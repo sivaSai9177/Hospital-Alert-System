@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Universal Design System Sync</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #333;
+      background: #fff;
+    }
+    
+    #root {
+      width: 100%;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+console.log('🎯 Simple UI starting...');
+
+// Track sync progress and current tokens
+let syncProgress = {};
+let currentTokens = null;
+
+// Initialize UI
+const root = document.getElementById('root');
+if (root) {
+  root.innerHTML = `
+    <div style="padding: 20px; font-family: sans-serif;">
+      <h1 style="color: #333; font-size: 18px; margin-bottom: 16px;">Universal Design System Sync</h1>
+      
+      <div style="margin-bottom: 20px;">
+        <h2 style="font-size: 16px; margin-bottom: 8px;">Status</h2>
+        <p style="color: #666;">Plugin loaded successfully! ✅</p>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+          <button id="extract-btn" style="
+            background: #0066ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+          ">Extract Tokens</button>
+          
+          <button id="sync-from-code-btn" style="
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+          ">← Sync from Code</button>
+        </div>
+        
+        <div style="display: flex; gap: 8px;">
+          <button id="export-btn" style="
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+            display: none;
+          ">📥 Export JSON</button>
+          
+          <button id="import-btn" style="
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+          ">📤 Import JSON</button>
+          
+          <button id="sync-to-code-btn" style="
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+            display: none;
+          ">Sync to Code →</button>
+        </div>
+        
+        <div style="margin-top: 8px;">
+          <button id="generate-pages-btn" style="
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+          ">🎨 Generate Design System Pages</button>
+        </div>
+        
+        <div style="margin-top: 8px;">
+          <button id="inspect-btn" style="
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+          ">🔍 Inspect Selected Frame</button>
+        </div>
+        
+        <div style="margin-top: 8px;">
+          <button id="update-pages-btn" style="
+            background: #e91e63;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+          ">🔄 Update Design System Pages</button>
+        </div>
+      </div>
+      
+      <div id="results" style="
+        background: #f5f5f5;
+        padding: 16px;
+        border-radius: 4px;
+        min-height: 100px;
+        max-height: 400px;
+        overflow-y: auto;
+      ">
+        <p style="color: #999;">Click "Extract Design Tokens" to begin</p>
+      </div>
+    </div>
+  `;
+  
+  // Attach event handlers after a short delay
+  setTimeout(() => {
+    // Extract button
+    const extractBtn = document.getElementById('extract-btn');
+    if (extractBtn) {
+      extractBtn.onclick = () => {
+        console.log('🔍 Extract button clicked');
+        const results = document.getElementById('results');
+        if (results) {
+          results.innerHTML = '<p style="color: #666;">Extracting tokens...</p>';
+        }
+        parent.postMessage({ 
+          pluginMessage: { type: 'EXTRACT_TOKENS' }
+        }, '*');
+      };
+    }
+    
+    // Sync from code button
+    const syncFromCodeBtn = document.getElementById('sync-from-code-btn');
+    if (syncFromCodeBtn) {
+      syncFromCodeBtn.onclick = () => {
+        console.log('📥 Sync from code button clicked');
+        const results = document.getElementById('results');
+        if (results) {
+          results.innerHTML = '<p style="color: #666;">Syncing tokens from code...</p>';
+        }
+        parent.postMessage({ 
+          pluginMessage: { type: 'SYNC_FROM_CODE' }
+        }, '*');
+      };
+    }
+    
+    // Generate pages button
+    const generatePagesBtn = document.getElementById('generate-pages-btn');
+    if (generatePagesBtn) {
+      generatePagesBtn.onclick = () => {
+        console.log('🎨 Generate pages button clicked');
+        const results = document.getElementById('results');
+        if (results) {
+          results.innerHTML = '<p style="color: #666;">Generating Design System pages...</p>';
+        }
+        parent.postMessage({ 
+          pluginMessage: { type: 'GENERATE_DESIGN_SYSTEM_PAGES' }
+        }, '*');
+      };
+    }
+    
+    // Inspect button
+    const inspectBtn = document.getElementById('inspect-btn');
+    if (inspectBtn) {
+      inspectBtn.onclick = () => {
+        console.log('🔍 Inspect button clicked');
+        const results = document.getElementById('results');
+        if (results) {
+          results.innerHTML = '<p style="color: #666;">Inspecting selected frame...</p>';
+        }
+        parent.postMessage({
+          pluginMessage: { type: 'GET_CURRENT_SELECTION' }
+        }, '*');
+      };
+    }
+    
+    // Update pages button - THE IMPORTANT ONE
+    const updatePagesBtn = document.getElementById('update-pages-btn');
+    if (updatePagesBtn) {
+      console.log('🔄 ✅ Update button found in DOM');
+      updatePagesBtn.onclick = () => {
+        console.log('🔄 Update pages button clicked');
+        const results = document.getElementById('results');
+        if (results) {
+          results.innerHTML = '<p style="color: #666;">Updating Design System pages with latest improvements...</p>';
+        }
+        
+        try {
+          parent.postMessage({ 
+            pluginMessage: { type: 'UPDATE_DESIGN_SYSTEM_PAGES' }
+          }, '*');
+          console.log('🔄 Update message sent to plugin');
+        } catch (error) {
+          console.error('Failed to send update message:', error);
+        }
+      };
+    } else {
+      console.error('❌ Update button not found in DOM');
+    }
+    
+    // Import button
+    const importBtn = document.getElementById('import-btn');
+    if (importBtn) {
+      importBtn.onclick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = async (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          
+          try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            if (!data.tokens || typeof data.tokens !== 'object') {
+              throw new Error('Invalid token file format');
+            }
+            
+            const results = document.getElementById('results');
+            if (results) {
+              results.innerHTML = `
+                <div style="padding: 16px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px;">
+                  <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #856404;">
+                    📤 Import Token Preview
+                  </h4>
+                  <div style="font-size: 12px; color: #856404; margin-bottom: 12px;">
+                    <div>🎨 Colors: ${(data.tokens.colors && data.tokens.colors.length) || 0}</div>
+                    <div>📝 Typography: ${(data.tokens.typography && data.tokens.typography.length) || 0}</div>
+                    <div>📏 Spacing: ${(data.tokens.spacing && data.tokens.spacing.length) || 0}</div>
+                    <div>🌑 Shadows: ${(data.tokens.shadows && data.tokens.shadows.length) || 0}</div>
+                    <div>⭕ Border Radius: ${(data.tokens.borderRadius && data.tokens.borderRadius.length) || 0}</div>
+                  </div>
+                  <button id="confirm-import" style="
+                    background: #28a745;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    margin-right: 8px;
+                  ">Apply Tokens</button>
+                  <button id="cancel-import" style="
+                    background: #6c757d;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    cursor: pointer;
+                  ">Cancel</button>
+                </div>
+              `;
+              
+              setTimeout(() => {
+                const confirmBtn = document.getElementById('confirm-import');
+                if (confirmBtn) {
+                  confirmBtn.onclick = () => {
+                    parent.postMessage({
+                      pluginMessage: {
+                        type: 'IMPORT_TOKENS',
+                        data: data.tokens
+                      }
+                    }, '*');
+                  };
+                }
+                
+                const cancelBtn = document.getElementById('cancel-import');
+                if (cancelBtn) {
+                  cancelBtn.onclick = () => {
+                    results.innerHTML = '<p style="color: #999;">Import cancelled.</p>';
+                  };
+                }
+              }, 100);
+            }
+            
+          } catch (error) {
+            alert('Failed to import file: ' + error.message);
+          }
+        };
+        
+        input.click();
+      };
+    }
+    
+    // Export button
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn) {
+      exportBtn.onclick = () => {
+        if (!currentTokens) {
+          alert('No tokens to export. Please extract tokens first.');
+          return;
+        }
+        
+        const exportData = {
+          tokens: currentTokens,
+          metadata: {
+            version: '1.0.0',
+            exportedAt: new Date().toISOString(),
+            source: 'figma-plugin'
+          }
+        };
+        
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `design-tokens-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        const results = document.getElementById('results');
+        if (results) {
+          results.innerHTML = `
+            <div style="padding: 16px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; color: #155724;">
+              <h4 style="margin: 0 0 8px 0; font-size: 14px;">✅ Tokens Exported Successfully!</h4>
+              <p style="margin: 0; font-size: 12px;">
+                Saved ${Object.keys(currentTokens).reduce((acc, key) => acc + ((currentTokens[key] && currentTokens[key].length) || 0), 0)} tokens to JSON file.
+              </p>
+            </div>
+          `;
+        }
+      };
+    }
+    
+    // Sync to code button
+    const syncToCodeBtn = document.getElementById('sync-to-code-btn');
+    if (syncToCodeBtn) {
+      syncToCodeBtn.onclick = () => {
+        console.log('📤 Sync to code button clicked');
+        
+        if (!currentTokens) {
+          alert('No tokens to sync. Please extract tokens first.');
+          return;
+        }
+        
+        const results = document.getElementById('results');
+        if (results) {
+          results.innerHTML = '<p style="color: #666;">Syncing tokens to code...</p>';
+        }
+        
+        parent.postMessage({ 
+          pluginMessage: {
+            type: 'SYNC_TO_CODE',
+            data: {
+              tokens: currentTokens,
+              config: {
+                direction: 'figma-to-code',
+                autoSync: false,
+                conflictResolution: 'manual'
+              }
+            }
+          }
+        }, '*');
+      };
+    }
+    
+    console.log('✅ All event handlers attached');
+  }, 100);
+  
+  // Listen for messages
+  window.onmessage = (event) => {
+    const msg = event.data.pluginMessage;
+    if (!msg) return;
+    
+    console.log('📨 Received message:', msg.type);
+    
+    const results = document.getElementById('results');
+    if (!results) return;
+    
+    switch (msg.type) {
+      case 'INIT':
+        console.log('📝 Settings received:', msg.data);
+        syncProgress = {};
+        break;
+        
+      case 'ERROR':
+        const errorMessage = msg.data.message || 'An error occurred';
+        results.innerHTML = `
+          <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 6px; padding: 16px;">
+            <h3 style="margin: 0 0 8px 0; color: #721c24; font-size: 14px;">❌ Error</h3>
+            <div style="color: #721c24; font-size: 13px; white-space: pre-wrap;">${errorMessage}</div>
+          </div>
+        `;
+        break;
+        
+      case 'LOADING':
+        results.innerHTML = `<p style="color: #666;">${msg.data.message}</p>`;
+        break;
+        
+      case 'PAGES_GENERATED':
+        console.log('📄 Pages generated:', msg.data);
+        if (msg.data.success) {
+          results.innerHTML = `
+            <div style="padding: 16px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px;">
+              <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #155724;">
+                ✅ ${msg.data.message}
+              </h4>
+              <div style="font-size: 12px; color: #155724; margin-top: 8px;">
+                <p style="margin: 4px 0;">📄 <strong>${msg.data.pages.designSystem}</strong> - Contains all design tokens organized by category</p>
+                <p style="margin: 4px 0;">📄 <strong>${msg.data.pages.components}</strong> - Contains universal component library</p>
+              </div>
+              <div style="margin-top: 12px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px;">
+                <p style="font-size: 11px; color: #155724; margin: 0;">
+                  💡 Tip: Navigate to these pages to see your design system and components with proper auto-layout.
+                </p>
+              </div>
+            </div>
+          `;
+        } else {
+          results.innerHTML = `
+            <div style="padding: 16px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 6px;">
+              <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #721c24;">
+                ❌ Failed to generate pages
+              </h4>
+              <div style="font-size: 12px; color: #721c24;">
+                ${msg.data.message}
+              </div>
+            </div>
+          `;
+        }
+        break;
+        
+      case 'PAGES_UPDATED':
+        console.log('🔄 Pages updated:', msg.data);
+        if (msg.data.success) {
+          const message = msg.data.message.replace(/\\n/g, '\n');
+          const lines = message.split('\n');
+          results.innerHTML = `
+            <div style="padding: 16px; background: #e3f2fd; border: 1px solid #90caf9; border-radius: 6px;">
+              <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1565c0;">
+                ✨ ${lines[0]}
+              </h4>
+              <div style="font-size: 12px; color: #1565c0; margin-top: 8px; white-space: pre-line;">
+                ${lines.slice(1).join('\n')}
+              </div>
+              <div style="font-size: 12px; color: #1565c0; margin-top: 12px;">
+                <p style="margin: 4px 0;">📄 <strong>${msg.data.pages.designSystem}</strong> - Updated with improved layout</p>
+                <p style="margin: 4px 0;">📄 <strong>${msg.data.pages.components}</strong> - Updated with enhanced components</p>
+              </div>
+              <div style="margin-top: 12px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px;">
+                <p style="font-size: 11px; color: #1565c0; margin: 0;">
+                  💡 Tip: The pages have been refreshed with responsive layouts, better spacing, and improved visual hierarchy.
+                </p>
+              </div>
+            </div>
+          `;
+        } else {
+          results.innerHTML = `
+            <div style="padding: 16px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 6px;">
+              <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #721c24;">
+                ❌ Failed to update pages
+              </h4>
+              <div style="font-size: 12px; color: #721c24;">
+                ${msg.data.message}
+              </div>
+            </div>
+          `;
+        }
+        break;
+        
+      case 'SELECTION_INFO':
+        console.log('🔍 Selection info:', msg.data);
+        const selectionInfo = msg.data;
+        
+        if (!selectionInfo || selectionInfo.frames.length === 0) {
+          results.innerHTML = `
+            <div style="padding: 16px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px;">
+              <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #856404;">
+                ⚠️ No Frame Selected
+              </h4>
+              <p style="font-size: 12px; color: #856404; margin: 0;">
+                Please select a frame in Figma to inspect its properties.
+              </p>
+            </div>
+          `;
+        } else {
+          const frame = selectionInfo.frames[0];
+          results.innerHTML = `
+            <div style="padding: 16px;">
+              <h3 style="margin: 0 0 16px 0; font-size: 16px;">🔍 Frame Inspector</h3>
+              
+              <div style="background: white; padding: 12px; border: 1px solid #e5e5e5; border-radius: 6px; margin-bottom: 16px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333;">Selected Frame</h4>
+                <div style="font-size: 12px; color: #666;">
+                  <p style="margin: 4px 0;"><strong>Name:</strong> ${frame.name}</p>
+                  <p style="margin: 4px 0;"><strong>Type:</strong> ${frame.type}</p>
+                  <p style="margin: 4px 0;"><strong>ID:</strong> <code style="font-family: monospace; font-size: 11px; background: #f5f5f5; padding: 2px 4px; border-radius: 3px;">${frame.id}</code></p>
+                  ${frame.page ? `<p style="margin: 4px 0;"><strong>Page:</strong> ${frame.page.name}</p>` : ''}
+                </div>
+              </div>
+              
+              ${frame.properties ? `
+                <div style="background: white; padding: 12px; border: 1px solid #e5e5e5; border-radius: 6px; margin-bottom: 16px;">
+                  <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333;">Properties</h4>
+                  <div style="font-size: 12px; color: #666;">
+                    <p style="margin: 4px 0;"><strong>Width:</strong> ${frame.properties.width}px</p>
+                    <p style="margin: 4px 0;"><strong>Height:</strong> ${frame.properties.height}px</p>
+                    <p style="margin: 4px 0;"><strong>X:</strong> ${frame.properties.x}</p>
+                    <p style="margin: 4px 0;"><strong>Y:</strong> ${frame.properties.y}</p>
+                    ${frame.properties.layoutMode ? `<p style="margin: 4px 0;"><strong>Layout:</strong> ${frame.properties.layoutMode}</p>` : ''}
+                    ${frame.properties.layoutPositioning ? `<p style="margin: 4px 0;"><strong>Positioning:</strong> ${frame.properties.layoutPositioning}</p>` : ''}
+                  </div>
+                </div>
+              ` : ''}
+              
+              ${frame.path && frame.path.length > 0 ? `
+                <div style="background: white; padding: 12px; border: 1px solid #e5e5e5; border-radius: 6px;">
+                  <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333;">Path</h4>
+                  <div style="font-size: 11px; font-family: monospace; color: #666;">
+                    ${frame.path.join(' → ')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
+        break;
+        
+      // Add other message handlers as needed...
+    }
+  };
+  
+  console.log('✅ Simple UI initialized');
+}
+  </script>
+</body>
+</html>

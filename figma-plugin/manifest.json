@@ -1,0 +1,117 @@
+{
+  "name": "Universal Design System Sync",
+  "id": "universal-design-system-sync",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/index.html",
+  "editorType": ["figma", "dev"],
+  "permissions": [
+    "currentuser",
+    "activeusers"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "http://localhost:3456",
+      "http://localhost:8080",
+      "ws://localhost:3458",
+      "ws://localhost:8080",
+      "https://anthropic.com",
+      "https://modelcontextprotocol.io"
+    ],
+    "reasoning": "Required for MCP server communication, WebSocket connections, and AI integration"
+  },
+  "documentAccess": "dynamic-page",
+  "enableProposedApi": false,
+  "capabilities": ["inspect", "textreview", "codegen"],
+  "codegenLanguages": [
+    {
+      "label": "React",
+      "value": "react"
+    },
+    {
+      "label": "React Native",
+      "value": "react-native"
+    },
+    {
+      "label": "Vue",
+      "value": "vue"
+    },
+    {
+      "label": "Angular",
+      "value": "angular"
+    },
+    {
+      "label": "HTML/CSS",
+      "value": "html"
+    },
+    {
+      "label": "Tailwind CSS",
+      "value": "tailwind"
+    }
+  ],
+  "menu": [
+    {
+      "name": "Open Plugin",
+      "command": "open-plugin"
+    },
+    {
+      "separator": true
+    },
+    {
+      "name": "Extract Design Tokens",
+      "command": "extract-tokens"
+    },
+    {
+      "name": "Sync to Code",
+      "command": "sync-to-code"
+    },
+    {
+      "name": "Sync from Code",
+      "command": "sync-from-code"
+    },
+    {
+      "separator": true
+    },
+    {
+      "name": "Generate Typography System",
+      "command": "generate-typography"
+    },
+    {
+      "name": "Generate Spacing System",
+      "command": "generate-spacing"
+    },
+    {
+      "name": "Generate Component Library",
+      "command": "generate-components"
+    },
+    {
+      "separator": true
+    },
+    {
+      "name": "Inspector",
+      "command": "open-inspector"
+    },
+    {
+      "name": "AI Assistant",
+      "command": "open-ai-assistant"
+    },
+    {
+      "separator": true
+    },
+    {
+      "name": "Export Documentation",
+      "command": "export-documentation"
+    },
+    {
+      "name": "Settings",
+      "command": "open-settings"
+    }
+  ],
+  "relaunchButtons": [
+    {
+      "command": "open-inspector",
+      "name": "Open Inspector",
+      "multipleSelection": true
+    }
+  ]
+}

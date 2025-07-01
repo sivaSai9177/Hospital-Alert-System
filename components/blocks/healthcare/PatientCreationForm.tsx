@@ -9,7 +9,8 @@ import {
 import { 
   VStack, 
   HStack,
-  Stack 
+  Stack,
+  ResponsiveGrid 
 } from '@/components/universal/layout';
 import { Text } from '@/components/universal/typography';
 import { Button } from '@/components/universal/interaction';
@@ -34,6 +35,7 @@ import { useOfflineQueue } from '@/lib/error/offline-queue';
 import { withRetry } from '@/lib/error/error-recovery';
 import { ErrorRecovery } from '@/components/blocks/errors/ErrorRecovery';
 import { useShadow } from '@/hooks/useShadow';
+import { PatientRegistrationSuccess } from './PatientRegistrationSuccess';
 import { 
   usePatientFormStore,
   usePatientFormData,
@@ -159,6 +161,8 @@ const BasicInfoStep = ({ hospitalId }: { hospitalId: string }) => {
             maximumDate={new Date()}
             error={errors.dateOfBirth}
             size={isMobile ? "default" : "lg"}
+            captionLayout="dropdown"
+            yearRange={{ start: 1900, end: new Date().getFullYear() }}
           />
         </VStack>
       </GlassCard>
@@ -223,11 +227,10 @@ const BasicInfoStep = ({ hospitalId }: { hospitalId: string }) => {
             <Text weight="semibold" size="lg">Department</Text>
             <Text size="sm" colorTheme="destructive">*</Text>
           </HStack>
-          <View style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            marginHorizontal: -spacing[1],
-          }}>
+          <ResponsiveGrid
+            columns={{ mobile: 2, tablet: 3, desktop: 4 }}
+            gap={2}
+          >
             {(() => {
               try {
                 if (!DEPARTMENT_CONFIG) {
@@ -241,16 +244,6 @@ const BasicInfoStep = ({ hospitalId }: { hospitalId: string }) => {
                   departments: deptKeys 
                 });
                 
-                // Responsive grid columns
-                const getColumns = () => {
-                  if (isMobile) return 3;
-                  if (isDesktop) return 4;
-                  return 3; // tablet
-                };
-                
-                const columns = getColumns();
-                const itemWidth = `${100 / columns}%`;
-                
                 return deptKeys.map((dept) => {
                   const deptConfig = DEPARTMENT_CONFIG[dept];
                   if (!deptConfig) {
@@ -259,27 +252,21 @@ const BasicInfoStep = ({ hospitalId }: { hospitalId: string }) => {
                   }
                   
                   return (
-                    <View key={dept} style={{ 
-                      width: itemWidth,
-                      paddingHorizontal: spacing[1],
-                      paddingVertical: spacing[1],
-                      marginBottom: spacing[1],
-                    }}>
-                      <SelectionButton
-                        value={dept}
-                        selected={formData.department === dept}
-                        onPress={() => {
-                          updateField('department', dept);
-                          clearError('department');
-                        }}
-                        icon={deptConfig.icon}
-                        label={deptConfig.label}
-                        color={deptConfig.color}
-                        size={isMobile ? 'sm' : 'md'}
-                        aspectRatio={isMobile ? 0.9 : 1.1}
-                        showCheckmark
-                      />
-                    </View>
+                    <SelectionButton
+                      key={dept}
+                      value={dept}
+                      selected={formData.department === dept}
+                      onPress={() => {
+                        updateField('department', dept);
+                        clearError('department');
+                      }}
+                      icon={deptConfig.icon}
+                      label={deptConfig.label}
+                      color={deptConfig.color}
+                      size={isMobile ? 'sm' : 'md'}
+                      aspectRatio={isMobile ? 1.2 : 1.1}
+                      showCheckmark
+                    />
                   );
                 });
               } catch (error) {
@@ -290,7 +277,7 @@ const BasicInfoStep = ({ hospitalId }: { hospitalId: string }) => {
                 return <Text colorTheme="destructive">Error loading departments</Text>;
               }
             })()}
-          </View>
+          </ResponsiveGrid>
           {errors.department && (
             <Text size="xs" colorTheme="destructive">{errors.department}</Text>
           )}
@@ -468,6 +455,7 @@ export function PatientCreationForm({
   });
   const { enqueue } = useOfflineQueue();
   const shadowMd = useShadow({ size: 'md' });
+  const utils = api.useUtils();
   
   // Log component mount
   React.useEffect(() => {
@@ -486,6 +474,8 @@ export function PatientCreationForm({
   const { errors, clearAllErrors, isFormValid, setError } = usePatientFormValidation();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [createdPatient, setCreatedPatient] = useState<any>(null);
   
   // Form validator
   const validator = createFormValidator(patientSchemas.createPatient);
@@ -499,19 +489,27 @@ export function PatientCreationForm({
       });
       haptic('success');
       
-      if (onSuccess) {
-        onSuccess(data);
-      }
+      // Store created patient data
+      setCreatedPatient(data);
+      
+      // Show success animation
+      setShowSuccess(true);
+      
+      // Invalidate patients query to ensure fresh data
+      await utils.healthcare.getMyPatients.invalidate();
       
       // Reset form after success
       resetForm();
       
+      // Handle navigation after animation
       setTimeout(() => {
-        if (!onSuccess && !embedded) {
+        if (onSuccess) {
+          onSuccess(data);
+        } else if (!embedded) {
           // Navigate to patients screen with the new patient ID
           router.replace(`/patients?newPatientId=${data?.id}`);
         }
-      }, 1500);
+      }, 2500); // Wait for animation to complete
     },
     onError: (error) => {
       logger.healthcare.error('Failed to create patient', {
@@ -973,6 +971,19 @@ export function PatientCreationForm({
       >
         {content}
       </ScrollView>
+      
+      {/* Success Animation */}
+      <PatientRegistrationSuccess
+        visible={showSuccess}
+        patientName={createdPatient?.name}
+        patientId={createdPatient?.id}
+        onComplete={() => {
+          setShowSuccess(false);
+          setCreatedPatient(null);
+        }}
+        autoHide={true}
+        autoHideDelay={2000}
+      />
     </KeyboardAvoidingView>
   );
 }

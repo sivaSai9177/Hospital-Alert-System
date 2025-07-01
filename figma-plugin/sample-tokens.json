@@ -1,0 +1,178 @@
+{
+  "colors": [
+    {
+      "name": "Primary/Blue",
+      "value": "#0066ff",
+      "description": "Main brand color",
+      "category": "primary"
+    },
+    {
+      "name": "Primary/Dark",
+      "value": "#0052cc",
+      "description": "Darker brand color for hover states",
+      "category": "primary"
+    },
+    {
+      "name": "Secondary/Green",
+      "value": "#28a745",
+      "description": "Success and positive actions",
+      "category": "secondary"
+    },
+    {
+      "name": "Neutral/Gray-100",
+      "value": "#f8f9fa",
+      "description": "Lightest gray for backgrounds",
+      "category": "neutral"
+    },
+    {
+      "name": "Neutral/Gray-500",
+      "value": "#6c757d",
+      "description": "Medium gray for secondary text",
+      "category": "neutral"
+    },
+    {
+      "name": "Neutral/Gray-900",
+      "value": "#212529",
+      "description": "Darkest gray for primary text",
+      "category": "neutral"
+    },
+    {
+      "name": "Danger/Red",
+      "value": "#dc3545",
+      "description": "Error states and destructive actions",
+      "category": "danger"
+    }
+  ],
+  "typography": [
+    {
+      "name": "Heading/H1",
+      "fontFamily": "Inter",
+      "fontSize": 32,
+      "fontWeight": 700,
+      "lineHeight": 40,
+      "letterSpacing": -0.5,
+      "description": "Main page headings"
+    },
+    {
+      "name": "Heading/H2",
+      "fontFamily": "Inter",
+      "fontSize": 24,
+      "fontWeight": 600,
+      "lineHeight": 32,
+      "letterSpacing": -0.3,
+      "description": "Section headings"
+    },
+    {
+      "name": "Body/Regular",
+      "fontFamily": "Inter",
+      "fontSize": 16,
+      "fontWeight": 400,
+      "lineHeight": 24,
+      "letterSpacing": 0,
+      "description": "Default body text"
+    },
+    {
+      "name": "Body/Small",
+      "fontFamily": "Inter",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "lineHeight": 20,
+      "letterSpacing": 0,
+      "description": "Small body text and captions"
+    }
+  ],
+  "spacing": [
+    {
+      "name": "spacing-xs",
+      "value": 4,
+      "scale": 1,
+      "description": "Extra small spacing"
+    },
+    {
+      "name": "spacing-sm",
+      "value": 8,
+      "scale": 2,
+      "description": "Small spacing"
+    },
+    {
+      "name": "spacing-md",
+      "value": 16,
+      "scale": 4,
+      "description": "Medium spacing"
+    },
+    {
+      "name": "spacing-lg",
+      "value": 24,
+      "scale": 6,
+      "description": "Large spacing"
+    },
+    {
+      "name": "spacing-xl",
+      "value": 32,
+      "scale": 8,
+      "description": "Extra large spacing"
+    }
+  ],
+  "shadows": [
+    {
+      "name": "Shadow/Small",
+      "value": [
+        {
+          "color": "#00000015",
+          "offset": { "x": 0, "y": 1 },
+          "radius": 3,
+          "spread": 0
+        }
+      ],
+      "description": "Subtle shadow for cards"
+    },
+    {
+      "name": "Shadow/Medium",
+      "value": [
+        {
+          "color": "#00000020",
+          "offset": { "x": 0, "y": 4 },
+          "radius": 6,
+          "spread": -1
+        }
+      ],
+      "description": "Medium elevation shadow"
+    },
+    {
+      "name": "Shadow/Large",
+      "value": [
+        {
+          "color": "#00000025",
+          "offset": { "x": 0, "y": 10 },
+          "radius": 15,
+          "spread": -3
+        }
+      ],
+      "description": "High elevation shadow for modals"
+    }
+  ],
+  "borderRadius": [
+    {
+      "name": "radius-sm",
+      "value": 4,
+      "description": "Small border radius"
+    },
+    {
+      "name": "radius-md",
+      "value": 8,
+      "description": "Medium border radius"
+    },
+    {
+      "name": "radius-lg",
+      "value": 16,
+      "description": "Large border radius"
+    },
+    {
+      "name": "radius-full",
+      "value": 9999,
+      "description": "Fully rounded"
+    }
+  ],
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-15T10:00:00Z"
+}

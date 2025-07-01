@@ -68,12 +68,13 @@ export const ThemeSelector: React.FC = () => {
               key={option.value}
               onPress={() => handleThemeChange(option.value)}
             >
-              <Card
-                borderWidth={2}
-                borderTheme="border"
-                p={4 as SpacingScale}
+              <View
                 style={{
+                  borderWidth: 2,
                   borderColor: isSelected ? colors.primary : colors.border,
+                  borderRadius: 8,
+                  padding: 16,
+                  backgroundColor: colors.card,
                   opacity: isPending ? 0.7 : 1,
                 }}
               >
@@ -110,7 +111,7 @@ export const ThemeSelector: React.FC = () => {
                     <ColorSwatch color={colors.success} label="Success" />
                   </HStack>
                 </VStack>
-              </Card>
+              </View>
             </Pressable>
           );
         })}

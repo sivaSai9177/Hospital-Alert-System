@@ -377,7 +377,7 @@ export function AlertListWithBatchActions({
         paddingTop: spacing[8] as number,
       }}>
         <EmptyState
-          icon="bell.slash"
+          icon={<Symbol name="bell.slash" size={48} color="#6B7280" />}
           title="No alerts found"
           description={
             searchQuery || hasFilters

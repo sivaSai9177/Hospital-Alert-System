@@ -2,13 +2,80 @@ import React from 'react';
 import { Stack, StackProps, Tabs } from 'expo-router';
 import { Platform, View } from 'react-native';
 import { useTheme } from '@/lib/theme/provider';
-import { 
-  pageTransitions, 
-  getDefaultPageTransition,
-  applyPageTransition,
-  TransitionType 
-} from '@/lib/navigation/page-transitions';
 import { useAnimationStore } from '@/lib/stores/animation-store';
+import { Easing } from 'react-native';
+
+// Page transition types
+export type TransitionType = 
+  | 'slide'
+  | 'fade'
+  | 'modal'
+  | 'zoom'
+  | 'flip'
+  | 'glass'
+  | 'parallax'
+  | 'cube'
+  | 'none';
+
+// Default transition configuration
+const defaultTransitions = {
+  slide: {
+    cardStyleInterpolator: ({ current, layouts }: any) => ({
+      cardStyle: {
+        transform: [{
+          translateX: current.progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [layouts.screen.width, 0],
+          })
+        }],
+        opacity: current.progress.interpolate({
+          inputRange: [0, 0.5, 1],
+          outputRange: [0, 0.7, 1],
+        }),
+      },
+    }),
+    transitionSpec: {
+      open: { animation: 'spring', config: { stiffness: 1000, damping: 500, mass: 3 } },
+      close: { animation: 'timing', config: { duration: 300, easing: Easing.out(Easing.poly(4)) } },
+    },
+  },
+  fade: {
+    cardStyleInterpolator: ({ current }: any) => ({
+      cardStyle: {
+        opacity: current.progress,
+      },
+    }),
+    transitionSpec: {
+      open: { animation: 'timing', config: { duration: 300 } },
+      close: { animation: 'timing', config: { duration: 300 } },
+    },
+  },
+  none: {
+    cardStyleInterpolator: () => ({}),
+    transitionSpec: {
+      open: { animation: 'timing', config: { duration: 0 } },
+      close: { animation: 'timing', config: { duration: 0 } },
+    },
+  },
+};
+
+// Local implementation of getDefaultPageTransition
+function getDefaultPageTransition(): TransitionType {
+  if (Platform.OS === 'ios') return 'slide';
+  if (Platform.OS === 'android') return 'fade';
+  return 'fade'; // Default for web
+}
+
+// Local implementation of applyPageTransition
+function applyPageTransition(transitionType: TransitionType = 'slide') {
+  const transition = defaultTransitions[transitionType] || defaultTransitions.fade;
+  return {
+    ...transition,
+    presentation: transitionType === 'modal' ? 'modal' : 'card',
+    gestureEnabled: transitionType !== 'none',
+    gestureDirection: transitionType === 'modal' ? 'vertical' : 'horizontal',
+  };
+}
 
 interface AnimatedStackProps extends Partial<StackProps> {
   transitionType?: TransitionType;
@@ -27,6 +94,8 @@ export function AnimatedStack({
   
   // Use no transition if reduced motion is enabled
   const finalTransitionType = reducedMotion ? 'none' : transitionType;
+  
+  // Apply the transition configuration
   const transition = applyPageTransition(finalTransitionType);
 
   return (
@@ -84,7 +153,7 @@ export function AnimatedScreen({
     <Stack.Screen
       options={{
         ...options,
-        ...(transitionType && applyPageTransition(transitionType)),
+        ...(transitionType ? applyPageTransition(transitionType) : {}),
       }}
     >
       {children}

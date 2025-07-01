@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES5", "DOM"],
+    "jsx": "react",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "noEmit": true,
+    "useDefineForClassFields": false,
+    "downlevelIteration": true,
+    "importHelpers": false,
+    "noEmitHelpers": false,
+    "typeRoots": ["./node_modules/@types"],
+    "types": ["node", "react", "react-dom"],
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["shared/*"],
+      "@ui/*": ["src/ui/*"],
+      "@handlers/*": ["src/handlers/*"],
+      "@utils/*": ["src/utils/*"],
+      "@types/*": ["src/types/*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "shared/**/*",
+    "mcp-server/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

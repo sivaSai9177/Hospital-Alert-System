@@ -43,7 +43,7 @@ interface UnifiedLogEntry {
 class UnifiedLogger {
   private isDevelopment = process.env.NODE_ENV === 'development';
   private isDebugMode = process.env.EXPO_PUBLIC_DEBUG_MODE === 'true';
-  private enabledCategories: Set<LogCategory> = new Set(['AUTH', 'API', 'TRPC', 'ERROR', 'HEALTHCARE']);
+  private enabledCategories: Set<LogCategory> = new Set(['AUTH', 'API', 'TRPC', 'ERROR', 'HEALTHCARE', 'ROUTER', 'SYSTEM']);
   private posthogClient: any = null;
   private posthogEnabled = false;
   private logBuffer: UnifiedLogEntry[] = [];
@@ -208,6 +208,25 @@ class UnifiedLogger {
           break;
         case 'debug':
           debugPanel.debug(formattedMessage, entry.data);
+          break;
+      }
+    }
+    
+    // Also log to console in development
+    if (this.isDevelopment) {
+      const consoleData = entry.data ? ` ${JSON.stringify(entry.data)}` : '';
+      switch (entry.level) {
+        case 'error':
+          console.error(formattedMessage + consoleData);
+          break;
+        case 'warn':
+          console.warn(formattedMessage + consoleData);
+          break;
+        case 'info':
+          console.log(formattedMessage + consoleData);
+          break;
+        case 'debug':
+          console.log(formattedMessage + consoleData);
           break;
       }
     }
@@ -511,6 +530,12 @@ class UnifiedLogger {
     }),
     warn: (message: string, data?: any) => this.log({
       level: 'warn',
+      category: 'SYSTEM',
+      message,
+      data,
+    }),
+    debug: (message: string, data?: any) => this.log({
+      level: 'debug',
       category: 'SYSTEM',
       message,
       data,

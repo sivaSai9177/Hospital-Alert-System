@@ -9,6 +9,9 @@ const config = getDefaultConfig(projectRoot);
 config.projectRoot = projectRoot;
 config.watchFolders = [projectRoot];
 
+// Add TypeScript extension resolution
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'tsx', 'ts'];
+
 // Add web-specific optimizations
 if (process.env.PLATFORM === 'web') {
   config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];

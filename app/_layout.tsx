@@ -17,10 +17,12 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Platform } from "react-native";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { stackScreenOptions } from "@/lib/navigation/transitions";
 import { AnimationProvider } from "@/lib/ui/animations/AnimationContext";
 import { logger } from '@/lib/core/debug/unified-logger';
 import { useThemeStore } from '@/lib/stores/theme-store';
+import { AppLoadingScreen } from '@/components/blocks/loading/AppLoadingScreen';
 
 import { ErrorBoundary } from "@/components/providers/ErrorBoundary";
 import { ErrorProvider } from "@/components/providers/ErrorProvider";
@@ -86,7 +88,13 @@ export default function RootLayout() {
   useEffect(() => {
     // Initialize storage on mobile
     if (Platform.OS !== 'web') {
+      console.log('[ROOT LAYOUT] Initializing secure storage...');
       initializeSecureStorage().then(() => {
+        console.log('[ROOT LAYOUT] Secure storage ready!');
+        setStorageReady(true);
+      }).catch(err => {
+        console.error('[ROOT LAYOUT] Secure storage init failed:', err);
+        // Set ready anyway to prevent infinite loading
         setStorageReady(true);
       });
     }
@@ -137,23 +145,31 @@ export default function RootLayout() {
   // Wait for both fonts and storage to be ready
   if (!loaded || !storageReady) {
     logger.system.info('Waiting for resources', { loaded, storageReady });
-    return null;
+    // Show the app loading screen while waiting for resources
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider style={{ flex: 1 }}>
+          <AppLoadingScreen showProgress={true} minDisplayTime={0} />
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    );
   }
 
   logger.system.info('Resources ready, rendering app');
 
   return (
     <GlobalErrorBoundary>
-      <SafeAreaProvider style={{ flex: 1 }}>
-        <ErrorBoundary>
-          <TRPCProvider dehydratedState={undefined}>
-            <ErrorProvider>
-              <SyncProvider>
-                <SessionProvider>
-                  <HospitalProvider>
-                    <AlertFilterProvider>
-                      <EnhancedThemeProvider>
-                        <ThemeSync />
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider style={{ flex: 1 }}>
+          <ErrorBoundary>
+            <TRPCProvider dehydratedState={undefined}>
+              <ErrorProvider>
+                <SyncProvider>
+                  <SessionProvider>
+                    <HospitalProvider>
+                      <AlertFilterProvider>
+                        <EnhancedThemeProvider>
+                          <ThemeSync />
                         <AnimationProvider>
                           <ThemeStyleInjector>
                           <RootErrorStoreSetup />
@@ -188,6 +204,15 @@ export default function RootLayout() {
                       options={{ 
                         presentation: 'modal',
                         headerShown: false,
+                      }}
+                    />
+                    
+                    {/* Onboarding routes */}
+                    <Stack.Screen 
+                      name="onboarding" 
+                      options={{ 
+                        headerShown: false,
+                        animation: 'fade',
                       }}
                     />
                     
@@ -230,6 +255,7 @@ export default function RootLayout() {
           </TRPCProvider>
         </ErrorBoundary>
       </SafeAreaProvider>
+      </GestureHandlerRootView>
     </GlobalErrorBoundary>
   );
 }

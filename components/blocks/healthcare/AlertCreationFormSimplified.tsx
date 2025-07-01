@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Platform, ScrollView, KeyboardAvoidingView, TextInput, Pressable, View, Animated, ActivityIndicator } from 'react-native';
-import { GlassCard } from '@/components/universal/display';
-import { VStack, HStack } from '@/components/universal/layout';
+import { GlassCard, Symbol } from '@/components/universal/display';
+import { VStack, HStack, ResponsiveGrid } from '@/components/universal/layout';
 import { Text } from '@/components/universal/typography';
 import { Button } from '@/components/universal/interaction';
 import { useSpacing } from '@/lib/stores/spacing-store';
@@ -20,7 +20,7 @@ import { useOfflineQueue } from '@/lib/error/offline-queue';
 import { withRetry } from '@/lib/error/error-recovery';
 import { ErrorRecovery } from '@/components/blocks/errors/ErrorRecovery';
 import { useShadow } from '@/hooks/useShadow';
-import { useFormDraft } from '@/hooks/useFormDraft';
+import { useSimpleFormDraft } from '@/hooks/useSimpleFormDraft';
 
 // Import healthcare types
 import { 
@@ -83,12 +83,12 @@ const AlertTypeButton = ({
           backgroundColor: theme.card,
           borderColor: selected ? config.color : isHovered ? theme.primary : theme.border,
           borderWidth: selected ? 2 : 1,
-          borderRadius: 12,
-          padding: spacing[3],
+          borderRadius: isMobile ? 12 : 10,
+          padding: isMobile ? spacing[3.5] : spacing[3],
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
-          aspectRatio: 1,
+          minHeight: isMobile ? 110 : 90,
           opacity: pressed ? 0.9 : 1,
           transform: [{ scale: pressed ? 0.98 : 1 }],
           position: 'relative',
@@ -101,16 +101,16 @@ const AlertTypeButton = ({
       {selected && (
         <View style={{
           position: 'absolute',
-          top: spacing[1],
-          right: spacing[1],
+          top: isMobile ? spacing[2] : spacing[1],
+          right: isMobile ? spacing[2] : spacing[1],
           backgroundColor: config.color,
-          borderRadius: 10,
-          width: 20,
-          height: 20,
+          borderRadius: isMobile ? 12 : 10,
+          width: isMobile ? 24 : 20,
+          height: isMobile ? 24 : 20,
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-          <Text size="xs" style={{ color: 'white' }}>✓</Text>
+          <Symbol name="checkmark" size={isMobile ? 14 : 12} color="white" />
         </View>
       )}
       
@@ -123,27 +123,35 @@ const AlertTypeButton = ({
           right: 0,
           bottom: 0,
           backgroundColor: selected ? config.color + '10' : theme.primary + '05',
-          borderRadius: 12,
+          borderRadius: isMobile ? 16 : 12,
         }} />
       )}
       
-      <VStack gap={1} alignItems="center" style={{ flex: 1, justifyContent: 'center' }}>
+      <VStack gap={isMobile ? 1.5 : 1} alignItems="center" style={{ flex: 1, justifyContent: 'center' }}>
         <Animated.View style={{ transform: [{ scale }] }}>
-          <Text size={isMobile ? "xl" : "2xl"}>
-            {config.icon}
-          </Text>
+          <View style={{
+            width: isMobile ? 48 : 40,
+            height: isMobile ? 48 : 40,
+            borderRadius: isMobile ? 12 : 10,
+            backgroundColor: config.color + '20',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Text size={isMobile ? "2xl" : "xl"}>
+              {config.icon}
+            </Text>
+          </View>
         </Animated.View>
         <Text 
-          size="xs" 
-          weight={selected ? "semibold" : "medium"}
+          size={isMobile ? "sm" : "xs"} 
+          weight={selected ? "bold" : "semibold"}
           style={{ 
             color: selected ? config.color : theme.foreground,
             textAlign: 'center',
-            lineHeight: 14,
           }}
           numberOfLines={2}
         >
-          {type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ')}
+          {config.label}
         </Text>
       </VStack>
     </Pressable>
@@ -178,20 +186,22 @@ const UrgencyButton = ({
           backgroundColor: theme.card,
           borderColor: selected ? config.color : isHovered ? theme.primary : theme.border,
           borderWidth: selected ? 2 : 1,
-          borderRadius: 12,
-          paddingVertical: spacing[3],
-          paddingHorizontal: spacing[3],
+          borderRadius: isMobile ? 12 : 10,
+          paddingVertical: isMobile ? spacing[3.5] : spacing[3],
+          paddingHorizontal: isMobile ? spacing[2.5] : spacing[2],
           opacity: pressed ? 0.9 : 1,
           width: '100%',
           transform: [{ scale: pressed ? 0.98 : 1 }],
           position: 'relative',
           overflow: 'hidden',
+          minHeight: isMobile ? 80 : 65,
+          aspectRatio: isMobile ? 1.6 : 1.4,
         },
         (selected || isHovered) ? shadowMd : shadowSm,
       ]}
     >
       {/* Selection indicator */}
-      {selected && (
+      {selected && Platform.OS !== 'web' && (
         <View style={{
           position: 'absolute',
           top: spacing[1],
@@ -203,7 +213,7 @@ const UrgencyButton = ({
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-          <Text size="xs" style={{ color: 'white' }}>✓</Text>
+          <Symbol name="checkmark" size={12} color="white" />
         </View>
       )}
       
@@ -216,23 +226,23 @@ const UrgencyButton = ({
           right: 0,
           bottom: 0,
           backgroundColor: selected ? config.color + '10' : theme.primary + '05',
-          borderRadius: 12,
+          borderRadius: isMobile ? 12 : 8,
         }} />
       )}
       
-      <VStack gap={1} align="center">
+      <VStack gap={isMobile ? 1 : 0.5} align="center" style={{ justifyContent: 'center', flex: 1 }}>
         <Text 
-          size="base"
+          size={isMobile ? "2xl" : "xl"}
           weight={selected ? "bold" : "semibold"}
           style={{ color: selected ? config.color : theme.foreground }}
         >
           {level}
         </Text>
         <Text 
-          size="xs" 
+          size={isMobile ? "xs" : "2xs"} 
           style={{ 
-            color: selected ? config.color + 'CC' : theme.mutedForeground,
-            fontSize: 10,
+            color: selected ? config.color : theme.mutedForeground,
+            opacity: 0.8,
           }}
         >
           {config.label}
@@ -275,25 +285,11 @@ export function AlertCreationFormSimplified({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Create a mock watch function for draft persistence that matches UseFormWatch type
-  const watch = useCallback(((name?: any) => {
-    if (name === undefined) {
-      return formData;
-    }
-    if (Array.isArray(name)) {
-      return name.map(field => formData[field as keyof typeof formData]);
-    }
-    return formData[name as keyof typeof formData];
-  }) as any, [formData]);
-  const reset = useCallback((data: Partial<CreateAlertInput>) => {
-    setFormData(data);
-  }, []);
-  
   // Add draft persistence
-  const { saveDraft, clearDraft, draftAge, isRestoring } = useFormDraft({
+  const { saveDraft, clearDraft, draftAge, isRestoring } = useSimpleFormDraft({
     formKey: 'alert-creation',
-    watch,
-    reset,
+    data: formData,
+    onDataChange: setFormData,
     autoSaveDelay: 1000, // Save every second
     showRestoreNotification: true,
     excludeFields: [], // Save all fields
@@ -369,7 +365,17 @@ export function AlertCreationFormSimplified({
           showErrorAlert('Validation Error', error.message);
         }
       } else {
-        showErrorAlert('Failed to create alert', error.message || 'Please try again');
+        // Show user-friendly error messages
+        let errorMessage = error.message || 'Please try again';
+        
+        // Make error messages more user-friendly
+        if (errorMessage.includes('You can only create alerts for hospitals within your organization')) {
+          errorMessage = 'You can only create alerts for hospitals you have access to.';
+        } else if (errorMessage.includes('Hospital assignment required')) {
+          errorMessage = 'Please complete your profile setup before creating alerts.';
+        }
+        
+        showErrorAlert('Unable to Create Alert', errorMessage);
       }
       setIsSubmitting(false);
     },
@@ -473,7 +479,7 @@ export function AlertCreationFormSimplified({
   // Remove internal success state - let parent handle it
   
   const content = (
-    <VStack gap={1} style={{ width: '100%', maxWidth: isDesktop ? 600 : '100%' }}>
+    <VStack gap={isMobile ? 5 : 4} style={{ width: '100%', maxWidth: isDesktop ? 600 : '100%' }}>
       {/* Loading indicator for draft restoration */}
       {isRestoring && (
         <GlassCard style={[{ backgroundColor: theme.muted }, shadowMd]}>
@@ -506,7 +512,7 @@ export function AlertCreationFormSimplified({
 
       {/* Room Number Input */}
       <GlassCard style={shadowMd}>
-        <VStack gap={2} p={3}>
+        <VStack gap={isMobile ? 3 : 2} p={isMobile ? 4 : 3}>
           <HStack gap={1} alignItems="center">
             <Text weight="semibold" size="lg">
               Room Number
@@ -525,13 +531,13 @@ export function AlertCreationFormSimplified({
             keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'}
             maxLength={10}
             style={{
-              fontSize: isMobile ? 20 : 24,
-              fontWeight: 'bold',
+              fontSize: isMobile ? 24 : 20,
+              fontWeight: '600',
               textAlign: 'center',
-              padding: spacing[3],
-              borderWidth: 1,
-              borderColor: errors.roomNumber ? theme.destructive : (formData.roomNumber ? theme.primary : theme.border),
-              borderRadius: 8,
+              padding: isMobile ? spacing[4] : spacing[3],
+              borderWidth: isMobile ? 2 : 1,
+              borderColor: errors.roomNumber ? theme.destructive : (formData.roomNumber ? theme.success : theme.border),
+              borderRadius: isMobile ? 16 : 8,
               backgroundColor: theme.background,
               color: theme.foreground,
             }}
@@ -553,34 +559,36 @@ export function AlertCreationFormSimplified({
       
       {/* Alert Type Selection */}
       <GlassCard style={shadowMd}>
-        <VStack gap={2} p={3}>
+        <VStack gap={isMobile ? 3 : 2} p={isMobile ? 4 : 3}>
           <HStack gap={1} alignItems="center">
             <Text weight="semibold" size="lg">
               Alert Type
             </Text>
             <Text size="sm" style={{ color: theme.destructive }}>*</Text>
           </HStack>
-          <HStack gap={1} style={{ justifyContent: 'space-evenly' }}>
-            {(Object.keys(ALERT_TYPE_CONFIG) as AlertType[]).map((type) => (
-              <View key={type} style={{ flex: 1, maxWidth: 80 }}>
-                <AlertTypeButton
-                  type={type}
-                  selected={formData.alertType === type}
-                  onPress={() => {
-                    haptic('light');
-                    const urgency = alertValidation.getDefaultUrgencyForType(type);
-                    setFormData({ 
-                      ...formData, 
-                      alertType: type,
-                      urgencyLevel: urgency as UrgencyLevel,
-                    });
-                    // Clear any alert type errors
-                    if (errors.alertType) clearErrors();
-                  }}
-                />
-              </View>
+          <ResponsiveGrid 
+            columns={{ mobile: 2, tablet: 3, desktop: 5 }}
+            gap={isMobile ? 3 : 2}
+          >
+            {(Object.keys(ALERT_TYPE_CONFIG) as AlertType[]).map((type, index) => (
+              <AlertTypeButton
+                key={type}
+                type={type}
+                selected={formData.alertType === type}
+                onPress={() => {
+                  haptic('light');
+                  const urgency = alertValidation.getDefaultUrgencyForType(type);
+                  setFormData({ 
+                    ...formData, 
+                    alertType: type,
+                    urgencyLevel: urgency as UrgencyLevel,
+                  });
+                  // Clear any alert type errors
+                  if (errors.alertType) clearErrors();
+                }}
+              />
             ))}
-          </HStack>
+          </ResponsiveGrid>
         </VStack>
       </GlassCard>
       
@@ -594,20 +602,22 @@ export function AlertCreationFormSimplified({
               </Text>
               <Text size="sm" style={{ color: theme.destructive }}>*</Text>
             </HStack>
-            <HStack gap={1} style={{ justifyContent: 'space-between' }}>
+            <ResponsiveGrid 
+              columns={{ mobile: 3, tablet: 5, desktop: 5 }}
+              gap={isMobile ? 2.5 : 2}
+            >
               {[1, 2, 3, 4, 5].map((level) => (
-                <View key={level} style={{ flex: 1, maxWidth: 70 }}>
-                  <UrgencyButton
-                    level={level as UrgencyLevel}
-                    selected={formData.urgencyLevel === level}
-                    onPress={() => {
-                      haptic('light');
-                      setFormData({ ...formData, urgencyLevel: level as UrgencyLevel });
-                    }}
-                  />
-                </View>
+                <UrgencyButton
+                  key={level}
+                  level={level as UrgencyLevel}
+                  selected={formData.urgencyLevel === level}
+                  onPress={() => {
+                    haptic('light');
+                    setFormData({ ...formData, urgencyLevel: level as UrgencyLevel });
+                  }}
+                />
               ))}
-            </HStack>
+            </ResponsiveGrid>
           </VStack>
         </GlassCard>
       )}
@@ -739,7 +749,7 @@ export function AlertCreationFormSimplified({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           padding: isMobile ? spacing[2] : spacing[3],
-          paddingBottom: isMobile ? spacing[6] : spacing[8],
+          paddingBottom: isMobile ? spacing[20] : spacing[8],
         }}
         keyboardShouldPersistTaps="handled"
       >

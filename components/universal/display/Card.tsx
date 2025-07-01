@@ -305,6 +305,12 @@ export const Card = React.forwardRef<View, CardProps>(({
   // Choose shadow style based on interactivity
   const shadowStyle = pressable && animated && shouldAnimate() ? interactiveShadow : staticShadow;
   
+  // Android-specific elevation for visibility
+  const androidElevation = Platform.OS === 'android' && !isGlassVariant ? {
+    elevation: variant === 'elevated' ? 8 : shadow === 'none' ? 0 : 2,
+    shadowColor: '#000',
+  } : {};
+  
   // Combine all handlers
   const combinedHandlers = pressable ? {
     onPress: onPress || handlePress,
@@ -331,8 +337,10 @@ export const Card = React.forwardRef<View, CardProps>(({
       className={Platform.OS === 'web' ? cardClasses : undefined}
       style={[
         shadowStyle,
+        androidElevation,
         animated && animatedCardStyle,
         animated && shouldAnimate() && entranceStyle,
+        { backgroundColor: variant === 'ghost' || variant === 'outline' ? 'transparent' : '#ffffff' },
         style,
         pointerEvents ? { pointerEvents } : undefined,
       ].filter(Boolean) as any}

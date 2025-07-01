@@ -1,21 +1,32 @@
-import type { SpacingValue, ButtonVariant, BadgeVariant } from '@/types/components';
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
+import { 
+  View, 
+  ScrollView, 
+  TouchableOpacity, 
+  ActivityIndicator, 
+  Platform,
+  TextInput,
+  KeyboardAvoidingView,
+  Keyboard
+} from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '@/lib/theme/provider';
+import { useSpacing } from '@/lib/stores/spacing-store';
+import { haptic } from '@/lib/ui/haptics';
 import {
   Text,
-  Input,
-  Card,
-  Stack,
-  Container,
+  VStack,
+  HStack,
   Badge,
   Avatar,
-  Tabs,
+  Box,
+  Symbol,
 } from '@/components/universal';
-import { cn } from '@/lib/core/utils';
-import { useSpacing } from '@/hooks/core/useSpacing';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { debounce } from '@/lib/core/utils';
 
-type SearchCategory = 'all' | 'patients' | 'staff' | 'alerts' | 'documents';
+type SearchCategory = 'all' | 'patients' | 'staff' | 'alerts';
 
 interface SearchResult {
   id: string;
@@ -54,257 +65,275 @@ const mockSearchResults: SearchResult[] = [
     metadata: '10 minutes ago',
     badge: 'critical',
   },
-  {
-    id: '4',
-    type: 'documents',
-    title: 'Patient Care Protocol v2.1',
-    subtitle: 'Updated guidelines for emergency care',
-    metadata: 'Last modified: Jan 5, 2025',
-  },
 ];
 
 export default function SearchModal() {
-  const spacing = useSpacing();
-
+  const theme = useTheme();
+  const { spacing } = useSpacing();
+  const insets = useSafeAreaInsets();
+  const searchInputRef = useRef<TextInput>(null);
+  
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<SearchCategory>('all');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>([
-    'Patient John Doe',
-    'Alert critical',
-    'Dr. Smith',
-    'Room 203',
-  ]);
-
-  useEffect(() => {
-    if (searchQuery.length > 0) {
-      handleSearch();
-    } else {
-      setSearchResults([]);
-    }
-  }, [searchQuery, activeCategory]);
-
-  const handleSearch = () => {
-    setIsLoading(true);
-    // Simulate API search
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  
+  // Auto-focus search input on mount
+  React.useEffect(() => {
     setTimeout(() => {
-      const filtered = mockSearchResults.filter(
-        (result) =>
-          (activeCategory === 'all' || result.type === activeCategory) &&
-          (result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            result.subtitle?.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-      setSearchResults(filtered);
-      setIsLoading(false);
-    }, 300);
-  };
+      searchInputRef.current?.focus();
+    }, 100);
+  }, []);
 
-  const handleClose = () => {
-    router.back();
+  // Debounced search function
+  const performSearch = useCallback(
+    debounce((query: string) => {
+      if (query.trim().length === 0) {
+        setSearchResults([]);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      
+      // Simulate API search
+      setTimeout(() => {
+        const filtered = mockSearchResults.filter(
+          (result) =>
+            result.title.toLowerCase().includes(query.toLowerCase()) ||
+            result.subtitle?.toLowerCase().includes(query.toLowerCase())
+        );
+        setSearchResults(filtered);
+        setIsLoading(false);
+      }, 300);
+    }, 300),
+    []
+  );
+
+  const handleSearchChange = (text: string) => {
+    setSearchQuery(text);
+    performSearch(text);
   };
 
   const handleResultPress = (result: SearchResult) => {
-    // Add to recent searches
-    const updatedRecent = [
-      `${result.type} ${result.title}`,
-      ...recentSearches.filter((s) => s !== `${result.type} ${result.title}`),
-    ].slice(0, 5);
-    setRecentSearches(updatedRecent);
-
+    haptic('light');
+    Keyboard.dismiss();
+    
     // Navigate based on result type
     switch (result.type) {
       case 'patients':
-        router.push(`/patient-details?patientId=${result.id}`);
-        break;
-      case 'staff':
-        router.push(`/member-details?memberId=${result.id}`);
+        router.back();
+        router.push(`/patients/${result.id}`);
         break;
       case 'alerts':
-        // TODO: Navigate to alert details
-// TODO: Replace with structured logging - /* console.log('Navigate to alert:', result.id) */;
         router.back();
+        router.push(`/alerts/${result.id}`);
         break;
-      case 'documents':
-        // TODO: Navigate to document viewer
-// TODO: Replace with structured logging - /* console.log('Navigate to document:', result.id) */;
+      case 'staff':
         router.back();
+        router.push(`/staff/${result.id}`);
         break;
     }
   };
 
-  const getResultIcon = (type: SearchCategory) => {
+  const handleClose = () => {
+    haptic('light');
+    Keyboard.dismiss();
+    router.back();
+  };
+
+  const getTypeColor = (type: SearchCategory) => {
     switch (type) {
-      case 'patients':
-        return '👤';
-      case 'staff':
-        return '👨‍⚕️';
-      case 'alerts':
-        return '🚨';
-      case 'documents':
-        return '📄';
-      default:
-        return '🔍';
+      case 'patients': return theme.primary;
+      case 'staff': return theme.success;
+      case 'alerts': return theme.destructive;
+      default: return theme.muted;
     }
   };
 
   return (
-    <Container className="flex-1 bg-background">
-      <Stack spacing="md" style={{ flex: 1 }}>
-        {/* Search Input */}
-        <View style={{ paddingHorizontal: spacing.md, paddingTop: spacing.md }}>
-          <Stack spacing="md">
-            <Input
-              placeholder="Search patients, staff, alerts, documents..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoFocus
-              leftIcon="🔍"
-              rightIcon={
-                searchQuery.length > 0 ? (
-                  <TouchableOpacity onPress={() => setSearchQuery('')}>
-                    <Text>✕</Text>
-                  </TouchableOpacity>
-                ) : null
-              }
-            />
-
-            {/* Category Tabs */}
-            <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as SearchCategory)}>
-              <Tabs.List>
-                <Tabs.Trigger value="all">All</Tabs.Trigger>
-                <Tabs.Trigger value="patients">Patients</Tabs.Trigger>
-                <Tabs.Trigger value="staff">Staff</Tabs.Trigger>
-                <Tabs.Trigger value="alerts">Alerts</Tabs.Trigger>
-                <Tabs.Trigger value="documents">Docs</Tabs.Trigger>
-              </Tabs.List>
-            </Tabs>
-          </Stack>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1, backgroundColor: theme.background }}
+    >
+      <View style={{ flex: 1 }}>
+        {/* Header */}
+        <View 
+          style={{
+            paddingTop: insets.top,
+            paddingHorizontal: spacing[4] as number,
+            paddingBottom: spacing[3] as number,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.border,
+            backgroundColor: theme.background,
+          }}
+        >
+          <HStack alignItems="center" gap={3}>
+            {/* Search Input */}
+            <View 
+              style={{
+                flex: 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: theme.muted + '20',
+                borderRadius: 10,
+                paddingHorizontal: spacing[3] as number,
+                height: 44,
+              }}
+            >
+              <Symbol name="magnifyingglass" size={18} color={theme.mutedForeground} />
+              <TextInput
+                ref={searchInputRef}
+                value={searchQuery}
+                onChangeText={handleSearchChange}
+                placeholder="Search patients, staff, alerts..."
+                placeholderTextColor={theme.mutedForeground}
+                style={{
+                  flex: 1,
+                  marginLeft: spacing[2] as number,
+                  fontSize: 16,
+                  color: theme.foreground,
+                }}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="search"
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity 
+                  onPress={() => {
+                    setSearchQuery('');
+                    setSearchResults([]);
+                  }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Symbol name="xmark.circle.fill" size={18} color={theme.mutedForeground} />
+                </TouchableOpacity>
+              )}
+            </View>
+            
+            {/* Cancel Button */}
+            <TouchableOpacity onPress={handleClose}>
+              <Text size="base" style={{ color: theme.primary }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </HStack>
         </View>
 
-        {/* Results */}
-        <ScrollView
-          contentContainerStyle={{
-            padding: spacing.md,
-            paddingTop: 0,
-            paddingBottom: 20 }}
+        {/* Search Results */}
+        <ScrollView 
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
           keyboardShouldPersistTaps="handled"
         >
-          <Stack spacing="md">
-            {/* Loading State */}
-            {isLoading && (
-              <View style={{ padding: spacing.xl, alignItems: 'center' }}>
-                <ActivityIndicator />
-              </View>
-            )}
-
-            {/* Recent Searches (when no query) */}
-            {!searchQuery && !isLoading && (
-              <>
-                <Text variant="h4">Recent Searches</Text>
-                <Stack spacing="sm">
-                  {recentSearches.map((search, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => setSearchQuery(search)}
-                    >
-                      <Card>
-                        <Stack direction="row" spacing="sm" align="center">
-                          <Text variant="body" style={{ opacity: 0.5 }}>
-                            🕐
-                          </Text>
-                          <Text variant="body">{search}</Text>
-                        </Stack>
-                      </Card>
-                    </TouchableOpacity>
-                  ))}
-                </Stack>
-              </>
-            )}
-
-            {/* Search Results */}
-            {searchQuery && !isLoading && (
-              <>
-                <Stack direction="row" justify="between" align="center">
-                  <Text variant="h4">
-                    {searchResults.length} Result{searchResults.length !== 1 ? 's' : ''}
-                  </Text>
-                  <TouchableOpacity onPress={handleClose}>
-                    <Text variant="body" style={{ opacity: 0.7 }}>
-                      Cancel
-                    </Text>
-                  </TouchableOpacity>
-                </Stack>
-
-                {searchResults.length === 0 ? (
-                  <Card>
-                    <Stack spacing="sm" align="center" style={{ padding: spacing.xl }}>
-                      <Text variant="h4" style={{ opacity: 0.5 }}>
-                        No results found
-                      </Text>
-                      <Text variant="body" style={{ opacity: 0.5 }}>
-                        Try adjusting your search or filters
-                      </Text>
-                    </Stack>
-                  </Card>
-                ) : (
-                  searchResults.map((result) => (
-                    <TouchableOpacity
-                      key={result.id}
-                      onPress={() => handleResultPress(result)}
-                      activeOpacity={0.7}
-                    >
-                      <Card>
-                        <Stack direction="row" spacing="md" align="center">
-                          {result.avatar ? (
-                            <Avatar size="default" fallback={result.avatar} />
-                          ) : (
-                            <Text variant="h4">{getResultIcon(result.type)}</Text>
+          {isLoading ? (
+            <View style={{ padding: spacing[8] as number, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={theme.primary} />
+            </View>
+          ) : searchQuery.length === 0 ? (
+            <VStack p={4} gap={4}>
+              <Text size="sm" colorTheme="mutedForeground" weight="semibold">
+                RECENT SEARCHES
+              </Text>
+              {['Patient John Doe', 'Alert critical', 'Dr. Smith'].map((recent, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => handleSearchChange(recent)}
+                >
+                  <HStack alignItems="center" gap={3}>
+                    <Symbol name="clock" size={16} color={theme.mutedForeground} />
+                    <Text colorTheme="mutedForeground">{recent}</Text>
+                  </HStack>
+                </TouchableOpacity>
+              ))}
+            </VStack>
+          ) : searchResults.length === 0 ? (
+            <View style={{ padding: spacing[8] as number, alignItems: 'center' }}>
+              <Symbol name="magnifyingglass" size={48} color={theme.mutedForeground} />
+              <Text 
+                size="base" 
+                colorTheme="mutedForeground" 
+                style={{ marginTop: spacing[2] as number }}
+              >
+                No results found
+              </Text>
+            </View>
+          ) : (
+            <VStack p={4} gap={2}>
+              {searchResults.map((result) => (
+                <Animated.View
+                  key={result.id}
+                  entering={FadeIn.duration(200)}
+                  exiting={FadeOut.duration(200)}
+                >
+                  <TouchableOpacity
+                    onPress={() => handleResultPress(result)}
+                    style={{
+                      backgroundColor: theme.card,
+                      borderRadius: 12,
+                      padding: spacing[3] as number,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <HStack alignItems="center" gap={3}>
+                      {result.avatar ? (
+                        <Avatar name={result.avatar} size="md" />
+                      ) : (
+                        <View 
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            backgroundColor: getTypeColor(result.type) + '20',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Symbol 
+                            name={
+                              result.type === 'patients' ? 'person.fill' :
+                              result.type === 'staff' ? 'stethoscope' :
+                              result.type === 'alerts' ? 'bell.fill' : 'doc.fill'
+                            } 
+                            size={20} 
+                            color={getTypeColor(result.type)} 
+                          />
+                        </View>
+                      )}
+                      
+                      <VStack style={{ flex: 1 }} gap={1}>
+                        <HStack alignItems="center" gap={2}>
+                          <Text weight="semibold">{result.title}</Text>
+                          {result.badge && (
+                            <Badge 
+                              variant={result.badge === 'critical' ? 'destructive' : 'default'} 
+                              size="sm"
+                            >
+                              {result.badge}
+                            </Badge>
                           )}
-                          <Stack spacing="xs" style={{ flex: 1 }}>
-                            <Stack direction="row" spacing="sm" align="center">
-                              <Text variant="body" weight="medium">
-                                {result.title}
-                              </Text>
-                              {result.badge && (
-                                <Badge
-                                  variant={
-                                    result.badge === 'critical'
-                                      ? 'destructive'
-                                      : result.badge === 'active'
-                                      ? 'default'
-                                      : 'secondary'
-                                  }
-                                  size="sm"
-                                >
-                                  {result.badge}
-                                </Badge>
-                              )}
-                            </Stack>
-                            {result.subtitle && (
-                              <Text variant="caption" style={{ opacity: 0.7 }}>
-                                {result.subtitle}
-                              </Text>
-                            )}
-                            {result.metadata && (
-                              <Text variant="caption" style={{ opacity: 0.5 }}>
-                                {result.metadata}
-                              </Text>
-                            )}
-                          </Stack>
-                          <Text variant="body" style={{ opacity: 0.5 }}>
-                            →
+                        </HStack>
+                        {result.subtitle && (
+                          <Text size="sm" colorTheme="mutedForeground">
+                            {result.subtitle}
                           </Text>
-                        </Stack>
-                      </Card>
-                    </TouchableOpacity>
-                  ))
-                )}
-              </>
-            )}
-          </Stack>
+                        )}
+                        {result.metadata && (
+                          <Text size="xs" colorTheme="mutedForeground">
+                            {result.metadata}
+                          </Text>
+                        )}
+                      </VStack>
+                      
+                      <Symbol name="chevron.right" size={16} color={theme.mutedForeground} />
+                    </HStack>
+                  </TouchableOpacity>
+                </Animated.View>
+              ))}
+            </VStack>
+          )}
         </ScrollView>
-      </Stack>
-    </Container>
+      </View>
+    </KeyboardAvoidingView>
   );
 }

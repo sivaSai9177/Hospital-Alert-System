@@ -1,0 +1,26 @@
+{
+  "name": "universal-design-system-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for syncing design tokens between Figma and code",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "build": "bun build src/server.ts --outfile=dist/server.js --target=bun",
+    "start": "bun dist/server.js",
+    "stdio": "bun run src/server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "@trpc/server": "^11.0.0-rc.446",
+    "glob": "^10.3.10",
+    "gray-matter": "^4.0.3",
+    "superjson": "^2.2.1",
+    "ws": "^8.16.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3"
+  }
+}

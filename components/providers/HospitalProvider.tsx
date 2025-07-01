@@ -20,7 +20,7 @@ export function HospitalProvider({ children }: { children: React.ReactNode }) {
   
   // Fetch hospitals when organization changes
   const { data: hospitalsData, isLoading, error } = api.healthcare.getOrganizationHospitals.useQuery(
-    { organizationId: organizationId! },
+    { organizationId: organizationId || '' },
     { 
       enabled: !!organizationId && !!user?.id,
       staleTime: 5 * 60 * 1000, // 5 minutes

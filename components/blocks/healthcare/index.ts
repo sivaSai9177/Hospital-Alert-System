@@ -34,10 +34,12 @@ export { AlertActions } from './AlertActions';
 // Alert Support Components
 export { EscalationTimer, EscalationSummary } from './EscalationTimer';
 export { EscalationTimeline, EscalationTimelineCompact } from './EscalationTimeline';
+export { AlertAcknowledgeDialog } from './alerts/AlertAcknowledgeDialog';
 
 // Patient Management Components
 export { ActivePatients } from './ActivePatients';
 export { PatientCardBlock as PatientCard } from './PatientCard';
+export { PatientCreationForm } from './PatientCreationForm';
 
 // Metrics & Analytics
 export { MetricsOverviewBlock as MetricsOverview } from './MetricsOverview';
@@ -63,6 +65,13 @@ export { GlassLoadingScreen } from './GlassLoadingScreen';
 
 // Success Animation
 export { SuccessAnimation } from './SuccessAnimation';
+export { PatientRegistrationSuccess } from './PatientRegistrationSuccess';
+
+// Mobile-optimized components
+export { MobileMetricCard } from './MobileMetricCard';
+export { MobileAlertSummary } from './MobileAlertSummary';
+export { MobileQuickActions } from './MobileQuickActions';
+export { MobileShiftStatus } from './MobileShiftStatus';
 
 // Type exports for better type safety
 export type { AlertSummaryBlockProps } from './AlertSummary';

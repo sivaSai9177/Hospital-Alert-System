@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --figma-color-bg: #2c2c2c;
+    --figma-color-bg-secondary: #383838;
+    --figma-color-surface: #404040;
+    --figma-color-hover: rgba(255, 255, 255, 0.04);
+    --figma-color-border: #444444;
+    --figma-color-border-strong: #555555;
+    --figma-color-text: #ffffff;
+    --figma-color-text-secondary: #b3b3b3;
+    --figma-color-text-tertiary: #808080;
+    --figma-color-blue: #18a0fb;
+    --figma-color-blue-hover: #0d90eb;
+    --figma-color-purple: #7b61ff;
+    --figma-color-green: #00aa44;
+    --figma-color-red: #ff3366;
+    --figma-color-selection: rgba(24, 160, 251, 0.1);
+    
+    /* Spacing */
+    --figma-spacing-xs: 4px;
+    --figma-spacing-sm: 8px;
+    --figma-spacing-md: 12px;
+    --figma-spacing-lg: 16px;
+    --figma-spacing-xl: 24px;
+    
+    /* Font sizes */
+    --figma-font-size-xs: 11px;
+    --figma-font-size-sm: 12px;
+    --figma-font-size-base: 13px;
+    --figma-font-size-lg: 14px;
+    
+    /* Border radius */
+    --figma-border-radius: 6px;
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  html, body {
+    @apply m-0 p-0 h-full;
+  }
+
+  body {
+    @apply bg-figma-bg text-figma-text text-figma-base;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    @apply h-full overflow-hidden;
+  }
+
+  /* Scrollbar styles */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-figma-surface;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-figma-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
+  }
+}
+
+@layer components {
+  /* Figma-style button */
+  .btn-figma {
+    @apply px-figma-md py-figma-sm bg-figma-blue text-white rounded-figma text-figma-sm font-medium;
+    @apply hover:bg-figma-blue-hover transition-colors cursor-pointer;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-figma-secondary {
+    @apply px-figma-md py-figma-sm bg-figma-surface text-figma-text rounded-figma text-figma-sm font-medium;
+    @apply hover:bg-figma-border transition-colors cursor-pointer border border-figma-border;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Input styles */
+  .input-figma {
+    @apply px-figma-sm py-figma-xs bg-figma-surface text-figma-text rounded-figma text-figma-sm;
+    @apply border border-figma-border focus:border-figma-blue focus:outline-none;
+    @apply placeholder-figma-text-secondary;
+  }
+
+  /* Panel styles */
+  .panel {
+    @apply bg-figma-surface rounded-figma border border-figma-border p-figma-lg;
+  }
+
+  /* Tab styles */
+  .tab {
+    @apply px-figma-md py-figma-sm text-figma-sm font-medium cursor-pointer;
+    @apply text-figma-text-secondary hover:text-figma-text transition-colors;
+    @apply border-b-2 border-transparent;
+  }
+
+  .tab-active {
+    @apply text-figma-text border-figma-blue;
+  }
+}

@@ -103,7 +103,7 @@ export const healthcareAuditLogs = pgTable('healthcare_audit_logs', {
   userId: text('user_id').references(() => users.id).notNull(),
   action: varchar('action', { length: 100 }).notNull(),
   entityType: varchar('entity_type', { length: 50 }).notNull(),
-  entityId: uuid('entity_id').notNull(),
+  entityId: text('entity_id').notNull(),
   timestamp: timestamp('timestamp').defaultNow(),
   metadata: jsonb('metadata'),
   success: boolean('success').default(true),
@@ -174,7 +174,7 @@ export const alertTimelineEvents = pgTable('alert_timeline_events', {
   description: text('description'),
   metadata: jsonb('metadata'),
 }, (table) => ({
-  eventTypeCheck: check('event_type_check', sql`${table.eventType} IN ('created', 'viewed', 'acknowledged', 'escalated', 'transferred', 'resolved', 'reopened', 'commented')`),
+  eventTypeCheck: check('event_type_check', sql`${table.eventType} IN ('created', 'viewed', 'acknowledged', 'escalated', 'transferred', 'resolved', 'reopened', 'commented', 'urgency_changed', 'note_added')`),
 }));
 
 // Shift logs to track shift history

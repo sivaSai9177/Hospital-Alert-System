@@ -7,6 +7,7 @@ import { logger } from '@/lib/core/debug/unified-logger';
 import { generateUUID } from '@/lib/core/crypto';
 import { toAppUser } from '@/lib/stores/auth-store';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 
 interface RegisterData {
   name: string;
@@ -23,6 +24,7 @@ interface RegisterData {
 export function useRegister() {
   const { updateAuth, setLoading, setError } = useAuth();
   const queryClient = useQueryClient();
+  const router = useRouter();
   
   // Sign up mutation
   const signUpMutation = api.auth.signUp.useMutation({
@@ -47,24 +49,29 @@ export function useRegister() {
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         };
         
-        updateAuth(appUser, session);
+        // Don't automatically log in - redirect to onboarding instead
+        logger.auth.info('New user registered, redirecting to onboarding', { 
+          userId: appUser.id,
+          role: appUser.role 
+        });
         
-        // For mobile, manually store the token as Better Auth plugin might not be working
+        // Store minimal session data for onboarding flow
         if (Platform.OS !== 'web' && data.token) {
           const { mobileStorage } = require('@/lib/core/secure-storage');
           
-          // Store in multiple formats to ensure compatibility
-          mobileStorage.setItem('better-auth_session-token', data.token);
-          mobileStorage.setItem('better-auth.session-token', data.token);
-          mobileStorage.setItem('better-auth_cookie', `better-auth.session-token=${data.token}; Path=/`);
+          // Store token for onboarding flow to use
+          mobileStorage.setItem('onboarding_token', data.token);
+          mobileStorage.setItem('onboarding_user_id', appUser.id);
           
-          logger.auth.debug('Manually stored session token for mobile after signup', {
-            tokenPreview: data.token.substring(0, 20) + '...',
-            storageKeys: ['better-auth_session-token', 'better-auth.session-token', 'better-auth_cookie']
+          logger.auth.debug('Stored onboarding token for mobile', {
+            userId: appUser.id
           });
         }
         
-        showSuccessAlert("Account Created", "Welcome to the app!");
+        showSuccessAlert("Account Created", "Let's get you set up!");
+        
+        // Redirect to onboarding
+        router.replace('/onboarding/welcome');
       } else {
         logger.auth.error('No user or token in response');
         showErrorAlert("Registration Error", "Account created but login failed. Please login manually.");

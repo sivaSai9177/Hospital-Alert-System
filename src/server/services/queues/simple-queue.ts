@@ -4,7 +4,7 @@
  */
 
 import Redis from 'ioredis';
-import { log } from '@/lib/core/debug/unified-logger';
+import { log } from '@/lib/core/debug/server-logger';
 
 export interface QueueJob<T = any> {
   id: string;

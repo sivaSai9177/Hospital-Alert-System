@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "commonjs",
+    "lib": [
+      "ES5",
+      "DOM"
+    ],
+    "allowJs": true,
+    "outDir": "./dist/temp",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "downlevelIteration": true,
+    "removeComments": true
+  },
+  "include": [
+    "src/code.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

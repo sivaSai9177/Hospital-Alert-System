@@ -5,7 +5,7 @@ import { VStack, HStack } from '@/components/universal/layout/Stack';
 import { Button } from '@/components/universal/interaction/Button';
 import { Card, CardContent } from '@/components/universal/display/Card';
 import { useGlassTheme } from '@/lib/design/themes/glass-theme';
-import { useSpacing } from '@/contexts/SpacingContext';
+import { useSpacing } from '@/lib/stores/spacing-store';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { 
   Symbol,
@@ -55,51 +55,61 @@ interface EmptyStateProps {
 const EMPTY_STATE_CONFIGS = {
   'no-data': {
     icon: <Database size={48} color="#6B7280" />,
+    emoji: '📊',
     title: 'No Data Available',
     description: 'There is no data to display at the moment.',
   },
   'no-results': {
     icon: <SearchIcon size={48} color="#6B7280" />,
+    emoji: '🔍',
     title: 'No Results Found',
     description: 'Try adjusting your filters or search criteria.',
   },
   'no-alerts': {
     icon: <AlertCircle size={48} color="#10B981" />,
-    title: 'No Active Alerts',
-    description: 'All clear! There are no active alerts at this time.',
+    emoji: '✅',
+    title: 'All Clear!',
+    description: 'No active alerts at this time. Everything is running smoothly.',
   },
   'no-patients': {
     icon: <Users size={48} color="#6B7280" />,
+    emoji: '🏥',
     title: 'No Patients',
     description: 'No patients match your current criteria.',
   },
   'no-activity': {
     icon: <Activity size={48} color="#6B7280" />,
+    emoji: '💤',
     title: 'No Recent Activity',
     description: 'There has been no activity in the selected time period.',
   },
   'no-schedule': {
     icon: <Calendar size={48} color="#6B7280" />,
+    emoji: '📅',
     title: 'No Scheduled Items',
     description: 'Your schedule is clear for the selected period.',
   },
   'no-reports': {
     icon: <FileText size={48} color="#6B7280" />,
+    emoji: '📄',
     title: 'No Reports Available',
     description: 'There are no reports to display.',
   },
   'error': {
     icon: <ErrorIcon size={48} color="#EF4444" />,
+    emoji: '❌',
     title: 'Something Went Wrong',
     description: 'We encountered an error while loading this content.',
   },
   'offline': {
     icon: <WarningIcon size={48} color="#F59E0B" />,
+    emoji: '📵',
     title: 'You\'re Offline',
     description: 'Please check your internet connection and try again.',
   },
   'custom': {
     icon: <Symbol name="tray" size={48} color="#6B7280" />,
+    emoji: '📭',
     title: 'No Content',
     description: 'There is nothing to display here.',
   },
@@ -124,7 +134,7 @@ export function EmptyState({
 
   const containerStyle = {
     flex: fullHeight ? 1 : undefined,
-    minHeight: fullHeight ? 400 : compact ? 200 : 300,
+    minHeight: fullHeight ? undefined : compact ? 200 : 300,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     padding: spacing[4],
@@ -135,40 +145,36 @@ export function EmptyState({
       entering={FadeIn.duration(300)}
       style={containerStyle}
     >
-      <Card style={{ 
-        width: '100%', 
-        maxWidth: 400,
-        padding: compact ? spacing[3] : spacing[6],
-        backgroundColor: glassTheme.colors.background,
-        borderColor: glassTheme.colors.border,
-        borderWidth: 1,
-        borderRadius: 12,
-      }}>
-        <CardContent>
-          <VStack gap={compact ? 3 : 4} align="center">
+      <VStack gap={compact ? 3 : 4} align="center" style={{ width: '100%', maxWidth: 400 }}>
             {/* Icon */}
             <Animated.View entering={FadeInUp.delay(100).springify()}>
-              <View style={{
-                width: compact ? 64 : 80,
-                height: compact ? 64 : 80,
-                borderRadius: compact ? 32 : 40,
-                backgroundColor: variant === 'error' ? '#FEE2E2' : 
-                               variant === 'offline' ? '#FEF3C7' :
-                               variant === 'no-alerts' ? '#D1FAE5' : '#F3F4F6',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-                {displayIcon}
-              </View>
+              {config.emoji ? (
+                <Text style={{ fontSize: compact ? 48 : 64 }}>
+                  {config.emoji}
+                </Text>
+              ) : (
+                <View style={{
+                  width: compact ? 64 : 80,
+                  height: compact ? 64 : 80,
+                  borderRadius: compact ? 32 : 40,
+                  backgroundColor: variant === 'error' ? '#FEE2E2' : 
+                                 variant === 'offline' ? '#FEF3C7' :
+                                 variant === 'no-alerts' ? '#D1FAE5' : '#F3F4F6',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                  {displayIcon}
+                </View>
+              )}
             </Animated.View>
 
             {/* Title */}
             <Animated.View entering={FadeInUp.delay(200).springify()}>
               <Text 
-                size={compact ? 'lg' : 'xl'}
-                weight="semibold"
-                align="center"
                 style={{ 
+                  fontSize: compact ? 18 : 24,
+                  fontWeight: '600',
+                  textAlign: 'center',
                   color: variant === 'error' ? '#DC2626' : '#111827',
                 }}
               >
@@ -180,10 +186,10 @@ export function EmptyState({
             {displayDescription && (
               <Animated.View entering={FadeInUp.delay(300).springify()}>
                 <Text 
-                  size="base"
-                  align="center"
-                  color="muted"
                   style={{ 
+                    fontSize: 14,
+                    textAlign: 'center',
+                    color: '#6B7280',
                     maxWidth: 300,
                   }}
                 >
@@ -210,9 +216,7 @@ export function EmptyState({
                 </HStack>
               </Animated.View>
             )}
-          </VStack>
-        </CardContent>
-      </Card>
+      </VStack>
     </Animated.View>
   );
 }

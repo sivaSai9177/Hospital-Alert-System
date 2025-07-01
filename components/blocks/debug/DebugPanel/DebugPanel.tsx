@@ -140,7 +140,10 @@ export function ConsolidatedDebugPanel() {
     }
   }, []);
 
-  if (!__DEV__) return null;
+  // Check if we should show the debug panel
+  const shouldShowDebugPanel = __DEV__ && debugStore.showDebugPanel !== false;
+  
+  if (!shouldShowDebugPanel) return null;
 
   const handleExport = async () => {
     const logText = exportLogs(filteredLogs);
@@ -201,8 +204,13 @@ export function ConsolidatedDebugPanel() {
       {/* Floating Debug Button */}
       <AnimatedView
         entering={FadeIn.delay(500).springify()}
-        className="absolute bottom-20 left-5 z-50"
-        style={shadowLg}
+        className="absolute left-5 z-50"
+        style={[
+          shadowLg,
+          {
+            bottom: Platform.OS === 'ios' ? 100 + 24 : 80 + 24, // Tab bar height + 24px
+          }
+        ]}
       >
         <TouchableOpacity
           onPress={() => setVisible(true)}

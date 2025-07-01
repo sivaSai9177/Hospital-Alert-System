@@ -4,6 +4,7 @@ import "../core/crypto";
 import { expoClient } from "@better-auth/expo/client";
 import { createAuthClient } from "better-auth/react";
 import { inferAdditionalFields } from "better-auth/client/plugins";
+import { emailOTPClient, phoneNumberClient, twoFactorClient, magicLinkClient, organizationClient, adminClient } from "better-auth/client/plugins";
 import { Platform, AppState, AppStateStatus } from "react-native";
 import { webStorage, mobileStorage } from "../core/secure-storage";
 import { getAuthUrl } from "../core/config/unified-env";
@@ -219,8 +220,29 @@ const baseAuthClient = createAuthClient({
           required: false,
           defaultValue: true,
         },
+        phoneNumber: {
+          type: "string",
+          required: false,
+        },
+        phoneNumberVerified: {
+          type: "boolean",
+          required: false,
+          defaultValue: false,
+        },
+        twoFactorEnabled: {
+          type: "boolean",
+          required: false,
+          defaultValue: false,
+        },
       },
     }),
+    // Authentication plugins
+    emailOTPClient(),
+    phoneNumberClient(),
+    twoFactorClient(),
+    magicLinkClient(),
+    organizationClient(),
+    adminClient(),
   ],
 });
 

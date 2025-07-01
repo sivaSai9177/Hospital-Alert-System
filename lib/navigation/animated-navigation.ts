@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { log } from '@/lib/core/debug/logger';
 import { haptic, haptics } from '@/lib/ui/haptics';
 import { DURATIONS } from '@/lib/ui/animations/constants';
+import { ROUTES } from './routes';
 
 export type NavigationAnimation = 
   | 'slide_from_right' 
@@ -118,14 +119,14 @@ export const animatedNavigation = {
    */
   auth: {
     toLogin: () => {
-      animatedNavigation.replace('/(auth)/login', {
+      animatedNavigation.replace(ROUTES.auth.login, {
         animation: 'fade',
         animationDuration: DURATIONS.fast,
       });
     },
     
     toSignup: () => {
-      animatedNavigation.navigate('/(auth)/register', {
+      animatedNavigation.navigate(ROUTES.auth.register, {
         animation: Platform.select({
           ios: 'slide_from_right',
           default: 'fade_from_bottom',
@@ -134,11 +135,11 @@ export const animatedNavigation = {
     },
     
     toForgotPassword: () => {
-      animatedNavigation.presentModal('/(auth)/forgot-password');
+      animatedNavigation.presentModal(ROUTES.auth.forgotPassword);
     },
     
     toCompleteProfile: () => {
-      animatedNavigation.replace('/(auth)/complete-profile', {
+      animatedNavigation.replace(ROUTES.auth.completeProfile, {
         animation: 'fade',
         animationDuration: DURATIONS.normal,
       });

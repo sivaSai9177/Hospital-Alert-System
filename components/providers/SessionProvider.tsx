@@ -68,9 +68,14 @@ export function SessionProvider({ children }: SessionProviderProps) {
         }
       });
       
-      // Initialize security checks
-      sendDeviceFingerprint();
-      checkSessionAnomaly();
+      // Initialize security checks with error handling
+      try {
+        sendDeviceFingerprint();
+        checkSessionAnomaly();
+      } catch (error) {
+        log.error('Failed to initialize security features', 'AUTH', error);
+        // Continue without security features rather than breaking the app
+      }
     } else {
       // Stop monitoring if not authenticated
       sessionTimeoutManager.stop();

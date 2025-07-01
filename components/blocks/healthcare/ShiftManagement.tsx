@@ -5,6 +5,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import Animated, { 
   FadeIn, 
   FadeInDown,
@@ -431,38 +432,14 @@ export function ShiftManagement({ onShiftChange, embedded = false }: ShiftManage
   
   // Use shift store
   const {
-    shiftState,
-    handoverData,
-    uiState,
-    setShiftState,
+    isOnDuty: storeIsOnDuty,
+    shiftStartTime: storeShiftStartTime,
+    shiftEndTime: storeShiftEndTime,
+    setShiftStatus,
     setHandoverData,
-    setUIState,
     clearHandoverData,
   } = useShiftStore();
   
-  // Log component mount and sync with shift status
-  useEffect(() => {
-    logger.healthcare.info('ShiftManagement component mounted', {
-      embedded,
-      hospitalId: hospitalContext.hospitalId,
-      hasValidHospital: hospitalContext.hasValidHospital,
-    });
-    
-    // Sync shift status with store
-    if (shiftStatus) {
-      setShiftState({
-        isOnDuty: shiftStatus.isOnDuty || false,
-        shiftStartTime: shiftStatus.shiftStartTime || null,
-        shiftEndTime: null,
-        lastShiftEnd: shiftState.lastShiftEnd,
-      });
-    }
-    
-    return () => {
-      logger.healthcare.debug('ShiftManagement component unmounted');
-    };
-  }, [embedded, hospitalContext.hospitalId, hospitalContext.hasValidHospital, shiftStatus?.isOnDuty]);
-
   // API Queries
   const { 
     data: shiftStatus, 
@@ -471,25 +448,12 @@ export function ShiftManagement({ onShiftChange, embedded = false }: ShiftManage
   } = api.healthcare.getShiftStatus.useQuery(undefined, {
     enabled: hospitalContext.canAccessHealthcare,
     refetchInterval: 60000, // Refresh every minute
-    onSuccess: (data) => {
-      logger.healthcare.debug('Shift status loaded', {
-        isOnDuty: data?.isOnDuty,
-        canStartShift: data?.canStartShift,
-        canEndShift: data?.canEndShift,
-        activeAlertCount: data?.activeAlertCount,
-        requiresHandover: data?.requiresHandover,
-      });
-    },
-    onError: (error) => {
-      logger.healthcare.error('Failed to fetch shift status', {
-        error: error.message,
-      });
-    },
   });
 
   const { 
     data: onDutyStaff,
     isLoading: staffLoading,
+    refetch: refetchOnDutyStaff,
   } = api.healthcare.getOnDutyStaff.useQuery(
     { hospitalId: hospitalContext.hospitalId || '' },
     {
@@ -501,12 +465,46 @@ export function ShiftManagement({ onShiftChange, embedded = false }: ShiftManage
   const { 
     data: activeAlerts,
     isLoading: alertsLoading,
+    refetch: refetchActiveAlerts,
   } = api.healthcare.getActiveAlerts.useQuery(
     { hospitalId: hospitalContext.hospitalId || '' },
     {
       enabled: !!hospitalContext.hospitalId && hospitalContext.canAccessHealthcare,
       refetchInterval: 30000, // Refresh every 30 seconds
     }
+  );
+  
+  // Log component mount and sync with shift status
+  useEffect(() => {
+    logger.healthcare.info('ShiftManagement component mounted', {
+      embedded,
+      hospitalId: hospitalContext.hospitalId,
+      hasValidHospital: hospitalContext.hasValidHospital,
+    });
+    
+    // Sync shift status with store
+    if (shiftStatus && 'isOnDuty' in shiftStatus) {
+      setShiftStatus({
+        isOnDuty: shiftStatus.isOnDuty || false,
+        shiftStartTime: ('shiftStartTime' in shiftStatus && shiftStatus.shiftStartTime) ? new Date(shiftStatus.shiftStartTime) : null,
+        shiftEndTime: null,
+      });
+    }
+    
+    return () => {
+      logger.healthcare.debug('ShiftManagement component unmounted');
+    };
+  }, [embedded, hospitalContext.hospitalId, hospitalContext.hasValidHospital, shiftStatus, setShiftStatus]);
+  
+  // Refetch shift status when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      logger.healthcare.debug('ShiftManagement screen focused - refetching status');
+      // Refetch all relevant data when screen regains focus
+      refetchStatus();
+      refetchOnDutyStaff();
+      refetchActiveAlerts();
+    }, [refetchStatus, refetchOnDutyStaff, refetchActiveAlerts])
   );
 
   // Mutations
@@ -518,11 +516,10 @@ export function ShiftManagement({ onShiftChange, embedded = false }: ShiftManage
       onShiftChange?.(data.isOnDuty);
       
       // Update shift store
-      setShiftState({
+      setShiftStatus({
         isOnDuty: data.isOnDuty,
-        shiftStartTime: data.isOnDuty ? new Date().toISOString() : null,
-        shiftEndTime: !data.isOnDuty ? new Date().toISOString() : null,
-        lastShiftEnd: !data.isOnDuty ? new Date().toISOString() : shiftState.lastShiftEnd,
+        shiftStartTime: data.isOnDuty ? new Date() : null,
+        shiftEndTime: !data.isOnDuty ? new Date() : null,
       });
       
       // Clear handover data after successful submission
@@ -550,15 +547,21 @@ export function ShiftManagement({ onShiftChange, embedded = false }: ShiftManage
   }, [toggleShiftMutation]);
 
   const handleEndShift = useCallback(() => {
+    const requiresHandover = shiftStatus && 'requiresHandover' in shiftStatus ? shiftStatus.requiresHandover : false;
+    const activeAlertCount = shiftStatus && 'activeAlertCount' in shiftStatus ? shiftStatus.activeAlertCount : 0;
+    
     logger.healthcare.info('Ending shift requested', {
-      requiresHandover: shiftStatus?.requiresHandover,
-      activeAlerts: shiftStatus?.activeAlertCount,
+      requiresHandover,
+      activeAlerts: activeAlertCount,
     });
     haptic('light');
     
     // Check if handover is required
-    if (shiftStatus && 'requiresHandover' in shiftStatus && shiftStatus.requiresHandover) {
-      logger.healthcare.debug('Handover required - showing form');
+    if (requiresHandover || activeAlertCount > 0) {
+      logger.healthcare.debug('Handover required - showing form', {
+        requiresHandover,
+        activeAlertCount,
+      });
       setShowHandoverForm(true);
     } else {
       toggleShiftMutation.mutate({ isOnDuty: false });
@@ -574,12 +577,7 @@ export function ShiftManagement({ onShiftChange, embedded = false }: ShiftManage
     // Update handover data in store
     setHandoverData({
       notes,
-      activeAlerts: activeAlerts?.alerts?.map(alert => ({
-        alertId: alert.id,
-        status: alert.status,
-        notes: '',
-      })) || [],
-      timestamp: new Date().toISOString(),
+      activeAlertsCount: activeAlerts?.alerts?.length || 0,
     });
     
     toggleShiftMutation.mutate({

@@ -1,0 +1,14 @@
+[install]
+# Use the same lockfile format as the main project
+lockfile = { save = true }
+
+[install.scopes]
+"@figma" = { token = "" }
+
+[test]
+# Test configuration
+root = "./src"
+
+[run]
+# Enable hot reloading in development
+hot = true

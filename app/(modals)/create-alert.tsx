@@ -260,13 +260,13 @@ export default function CreateAlertModal() {
     <>
       <Stack.Screen
         options={{
-          presentation: 'modal',
+          presentation: isMobile ? 'fullScreenModal' : 'modal',
           headerTitleAlign: 'center',
           headerRight: () => null,
           headerTitle: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontSize: 32 }}>🚨</Text>
-              <Text style={{ fontSize: 19, fontWeight: '600', color: theme.foreground }}>
+              <Text style={{ fontSize: isMobile ? 28 : 32 }}>🚨</Text>
+              <Text style={{ fontSize: isMobile ? 17 : 19, fontWeight: '600', color: theme.foreground }}>
                 Create Emergency Alert
               </Text>
             </View>
@@ -280,8 +280,8 @@ export default function CreateAlertModal() {
               }}
             >
               <Symbol 
-                name={Platform.OS === 'ios' ? "chevron.left" : "arrow.left"} 
-                size={24} 
+                name={isMobile ? "xmark" : (Platform.OS === 'ios' ? "chevron.left" : "arrow.left")} 
+                size={isMobile ? 22 : 24} 
                 color={theme.foreground} 
               />
             </Pressable>
@@ -289,20 +289,25 @@ export default function CreateAlertModal() {
         }}
       />
       <PermissionGuard permission={PERMISSIONS.CREATE_ALERTS}>
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.muted }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.muted }} edges={['bottom']}>
           <KeyboardAvoidingView
             style={{ flex: 1 }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           >
-            <View style={{ 
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: isMobile ? spacing[2] : spacing[3],
-            }}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                flexGrow: 1,
+                padding: isMobile ? spacing[3] : spacing[4],
+                paddingTop: isMobile ? spacing[6] : spacing[8],
+              }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
               <View style={{ 
                 width: '100%', 
                 maxWidth: isDesktop ? 600 : '100%',
+                alignSelf: 'center',
               }}>
                 <HealthcareErrorBoundary>
                   <AlertCreationFormSimplified 
@@ -312,7 +317,7 @@ export default function CreateAlertModal() {
                   />
                 </HealthcareErrorBoundary>
               </View>
-            </View>
+            </ScrollView>
           </KeyboardAvoidingView>
           
           {/* Success Animation Overlay */}

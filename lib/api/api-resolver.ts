@@ -184,6 +184,9 @@ class ApiResolver {
     const { endpoints, fallbackEnabled } = config.api;
 
     // Add network-aware endpoints for development
+    // DISABLED: Using environment variable instead of auto-detection
+    // This prevents hardcoded IPs from overriding the correct environment configuration
+    /*
     if (config.name !== 'production' && config.name !== 'staging') {
       try {
         const networkEndpoints = await getAllPossibleEndpoints();
@@ -204,6 +207,7 @@ class ApiResolver {
         log.warn('Failed to get network endpoints', 'API_RESOLVER', error);
       }
     }
+    */
 
     if (!fallbackEnabled && endpoints.length > 0) {
       // Fallback disabled, use first endpoint

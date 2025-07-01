@@ -28,6 +28,7 @@ import {
   AlertTimelineWidget,
   AlertFilters,
   AlertFilterPresets,
+  AlertAcknowledgeDialog,
 } from '@/components/blocks/healthcare';
 import { ApiErrorBoundary } from '@/components/blocks/errors/ApiErrorBoundary';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -43,8 +44,8 @@ import Animated, {
   withTiming,
   withSpring,
 } from 'react-native-reanimated';
-import { AnimatedPageWrapper, pageEnteringAnimations } from '@/lib/navigation/page-transitions';
 import { useLayoutTransition } from '@/hooks/useLayoutTransition';
+import { UnifiedHeader } from '@/components/blocks/navigation/UnifiedHeader';
 
 
 function AlertsScreenContent() {
@@ -55,6 +56,7 @@ function AlertsScreenContent() {
   const searchParams = useLocalSearchParams();
   const [refreshing, setRefreshing] = useState(false);
   const [highlightedAlertId, setHighlightedAlertId] = useState<string | null>(null);
+  const [acknowledgeDialogAlert, setAcknowledgeDialogAlert] = useState<any | null>(null);
   const scrollY = useSharedValue(0);
   
   // Debug logging
@@ -205,22 +207,29 @@ function AlertsScreenContent() {
   const handleCreateAlert = useCallback(() => {
     haptic('medium');
     if (canCreateAlerts) {
-      router.push('/create-alert');
+      router.push('/(modals)/create-alert');
     } else {
       // Error alert is handled by the hook
     }
   }, [canCreateAlerts, router]);
   
-  const handleAcknowledge = useCallback(async (alertId: string) => {
+  const handleAcknowledge = useCallback((alertId: string) => {
+    // Find the alert to show in dialog
+    const alert = data?.alerts.find(a => a.id === alertId);
+    if (alert) {
+      setAcknowledgeDialogAlert(alert);
+    }
+  }, [data?.alerts]);
+  
+  const handleAcknowledgeSubmit = useCallback(async (acknowledgeData: any) => {
     try {
-      await acknowledgeMutation.mutateAsync({ 
-        alertId,
-        notes: 'Acknowledged via mobile app',
-      });
+      await acknowledgeMutation.mutateAsync(acknowledgeData);
       haptic('success');
+      setAcknowledgeDialogAlert(null);
     } catch (error) {
       haptic('error');
       log.error('Failed to acknowledge alert', 'ALERTS', { error });
+      throw error; // Re-throw to let dialog handle error state
     }
   }, [acknowledgeMutation]);
   
@@ -341,11 +350,10 @@ function AlertsScreenContent() {
   
   if (isLoading && !data) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-        <Animated.View 
-          entering={FadeIn.duration(300)}
-          style={{ flex: 1 }}
-        >
+      <Animated.View 
+        entering={FadeIn.duration(300)}
+        style={{ flex: 1, backgroundColor: theme.background }}
+      >
           {/* Header Skeleton */}
           <LinearGradient
             colors={[theme.primary + '20', theme.background]}
@@ -396,8 +404,7 @@ function AlertsScreenContent() {
               </VStack>
             </VStack>
           </ScrollView>
-        </Animated.View>
-      </SafeAreaView>
+      </Animated.View>
     );
   }
   
@@ -410,8 +417,31 @@ function AlertsScreenContent() {
   // Remove debug UI and show proper alerts screen
 
   return (
-    <Animated.View style={[{ flex: 1 }, pageAnimatedStyle]}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    <Animated.View style={[{ flex: 1, backgroundColor: theme.background }, pageAnimatedStyle]}>
+        {/* Unified Header */}
+        <UnifiedHeader 
+          title="Alerts"
+          subtitle="Real-time monitoring"
+          showBackButton={false}
+          rightElement={
+            canCreateAlerts ? (
+              <Button
+                onPress={handleCreateAlert}
+                size="default"
+                style={{
+                  backgroundColor: '#ef4444',
+                  borderRadius: 12,
+                }}
+              >
+                <HStack gap={spacing[1] as any} alignItems="center">
+                  <Symbol name="plus.circle.fill" size="sm" color="white" />
+                  <Text style={{ color: 'white' }}>New Alert</Text>
+                </HStack>
+              </Button>
+            ) : undefined
+          }
+        />
+        
         {/* Connection Status */}
         <ConnectionStatus 
           connectionState={connectionState} 
@@ -419,37 +449,12 @@ function AlertsScreenContent() {
           showDetails={false}
         />
         
-        {/* Animated Header */}
-        <Animated.View style={[headerStyle, { overflow: 'hidden' }] as any}>
+        {/* Stats Section */}
         <LinearGradient
           colors={[theme.primary + '20', theme.background]}
-          style={{ flex: 1, paddingHorizontal: spacing[4] as any, paddingTop: spacing[4] as any }}
+          style={{ paddingHorizontal: spacing[4] as any, paddingVertical: spacing[3] as any }}
         >
           <VStack gap={spacing[3] as any}>
-            <HStack justifyContent="space-between" alignItems="center">
-              <VStack>
-                <Text size="3xl" weight="bold">Alerts</Text>
-                <Text size="sm" colorTheme="mutedForeground">
-                  Real-time monitoring
-                </Text>
-              </VStack>
-              
-              {canCreateAlerts && (
-                <Button
-                  onPress={handleCreateAlert}
-                  size="default"
-                  style={{
-                    backgroundColor: '#ef4444',
-                    borderRadius: 12,
-                  }}
-                >
-                  <HStack gap={spacing[1] as any} alignItems="center">
-                    <Symbol name="plus.circle.fill" size="sm" color="white" />
-                    <Text style={{ color: 'white' }}>New Alert</Text>
-                  </HStack>
-                </Button>
-              )}
-            </HStack>
             
             {/* Quick Stats */}
             <ScrollView 
@@ -485,7 +490,6 @@ function AlertsScreenContent() {
             </ScrollView>
           </VStack>
         </LinearGradient>
-      </Animated.View>
       
       <View style={{ flex: 1 }}>
         {/* Filter Presets */}
@@ -544,7 +548,17 @@ function AlertsScreenContent() {
           </Animated.View>
         )}
       </View>
-    </SafeAreaView>
+      
+      {/* Acknowledge Dialog */}
+      {acknowledgeDialogAlert && (
+        <AlertAcknowledgeDialog
+          isOpen={!!acknowledgeDialogAlert}
+          onClose={() => setAcknowledgeDialogAlert(null)}
+          alert={acknowledgeDialogAlert}
+          onAcknowledge={handleAcknowledgeSubmit}
+          isLoading={acknowledgeMutation.isLoading}
+        />
+      )}
     </Animated.View>
   );
 }

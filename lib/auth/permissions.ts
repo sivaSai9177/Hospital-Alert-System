@@ -292,7 +292,7 @@ export function hasAllPermissions(userRole: UserRole | undefined, permissions: P
   return permissions.every(permission => hasPermission(userRole, permission));
 }
 
-export function hasRole(userRole: UserRole | undefined, allowedRoles: UserRole[]): boolean {
+export function hasRole(userRole: UserRole | undefined, allowedRoles: readonly UserRole[]): boolean {
   if (!userRole) return false;
   return allowedRoles.includes(userRole);
 }

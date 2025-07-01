@@ -99,9 +99,9 @@ export function HospitalSwitcher({
         <Card 
           className={`p-3 ${compact ? 'px-3 py-2' : ''} hover:bg-muted transition-colors`}
           style={{
-            shadowColor: 'transparent',
-            shadowOpacity: 0,
-            elevation: 0,
+            shadowColor: Platform.OS === 'android' ? '#000' : 'transparent',
+            shadowOpacity: Platform.OS === 'android' ? 0.1 : 0,
+            elevation: Platform.OS === 'android' ? 2 : 0,
           }}
         >
           <HStack 

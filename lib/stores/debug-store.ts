@@ -16,6 +16,7 @@ export interface DebugSettings {
   
   // Display
   showDebugPanel: boolean;
+  showNavigationDebugger: boolean;
   debugPanelPosition: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
   debugPanelOpacity: number;
   
@@ -40,6 +41,7 @@ interface DebugStore extends DebugSettings {
   updateSettings: (settings: Partial<DebugSettings>) => void;
   resetSettings: () => void;
   toggleDebugPanel: () => void;
+  toggleNavigationDebugger: () => void;
   setLogLevel: (level: DebugSettings['logLevel']) => void;
   
   // Helpers
@@ -57,7 +59,8 @@ const defaultSettings: DebugSettings = {
   logLevel: 'debug',
   
   // Display
-  showDebugPanel: __DEV__,
+  showDebugPanel: true, // Always default to true, controlled by __DEV__ in component
+  showNavigationDebugger: false, // Default to hidden
   debugPanelPosition: 'bottom-right',
   debugPanelOpacity: 1,
   
@@ -131,6 +134,11 @@ export const useDebugStore = create<DebugStore>()(
             state.showDebugPanel = !state.showDebugPanel;
           }),
           
+        toggleNavigationDebugger: () =>
+          set((state) => {
+            state.showNavigationDebugger = !state.showNavigationDebugger;
+          }),
+          
         setLogLevel: (level) =>
           set((state) => {
             state.logLevel = level;
@@ -151,6 +159,8 @@ export const useDebugStore = create<DebugStore>()(
           enablePerformanceLogging: state.enablePerformanceLogging,
           enableHealthcareLogging: state.enableHealthcareLogging,
           logLevel: state.logLevel,
+          showDebugPanel: state.showDebugPanel,
+          showNavigationDebugger: state.showNavigationDebugger,
           debugPanelPosition: state.debugPanelPosition,
           debugPanelOpacity: state.debugPanelOpacity,
           showNetworkRequests: state.showNetworkRequests,

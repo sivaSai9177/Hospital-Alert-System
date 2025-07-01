@@ -1,0 +1,23 @@
+{
+  "name": "figma-token-sync",
+  "version": "1.0.0",
+  "description": "Sync design tokens between Figma and your codebase",
+  "vendor": "YourCompany",
+  "capabilities": {
+    "tools": true
+  },
+  "tools": [
+    {
+      "name": "read-tokens",
+      "description": "Read design tokens from the codebase"
+    },
+    {
+      "name": "write-tokens",
+      "description": "Write design tokens to the codebase"
+    },
+    {
+      "name": "sync-tokens",
+      "description": "Sync tokens between Figma and codebase"
+    }
+  ]
+}
